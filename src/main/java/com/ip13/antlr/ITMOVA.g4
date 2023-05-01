@@ -1,120 +1,160 @@
 grammar ITMOVA;
 program :
-
+    statements
     ;
 
-func :
-    func_def func_body SEMICOLON;
-
-func_body :
-    START operations FINISH
+from_cycle :
+    FROM lower_border TO upper_border WITH step COLON START statements FINISH
     ;
 
-func_def : COLON FUNC_NAME OPEN_BRACE params_for_func_def CLOSE_BRACE
-    ;
-
-params_for_func_def :
-    param_for_func_def
+lower_border :
+    INT
     |
-    params_for_func_def COMMA param_for_func_def
-    |
-
+    VAR_NAME
     ;
 
-param_for_func_def :
-    VAR_NAME EXCLAMATION_MARK TYPE
+upper_border :
+    INT
+    |
+    VAR_NAME
+    ;
+
+step :
+    INT
+    |
+    VAR_NAME
+    ;
+
+if_else_operator :
+    if_operator (else_if_operator)* (else_operator)?
+    ;
+
+if_operator :
+    IF bool_expr COLON START statements FINISH
+    ;
+
+else_if_operator :
+    ELSE IF bool_expr COLON START statements FINISH
+    ;
+
+else_operator :
+    ELSE COLON START statements FINISH
+    ;
+
+bool_expr :
+    func_call
+    ;
+
+func_def :
+    FUNC_NAME OPEN_BRACE func_params CLOSE_BRACE COLON (TYPE | VOID) START statements FINISH
+    ;
+
+func_params :
+    func_param {System.out.println($1);}
+    |
+    func_params COMMA func_param
+    |
+    // empty
+    ;
+
+func_param :
+    VAR_NAME COLON TYPE
+    ;
+
+statements :
+    statement
+    |
+    statements statement
+    |
+    // empty
+    ;
+
+
+statement : // everything, that end with SEMICOLON or FINISH
+    func_call SEMICOLON
+    |
+    var_def SEMICOLON
+    |
+    from_cycle
+    |
+    if_else_operator
+    |
+    func_def
+    |
+    RETURN VAR_NAME SEMICOLON
     ;
 
 func_call :
-    CALL FUNC_NAME OPEN_BRACE params_for_func_call CLOSE_BRACE SEMICOLON
+    FUNC_NAME OPEN_BRACE func_args CLOSE_BRACE
     ;
 
-params_for_func_call :
-    param_for_func_call
+func_args :
+    func_arg
     |
-    params_for_func_call COMMA param_for_func_call
+    func_args COMMA func_arg
     |
-
+    // empty
     ;
 
-param_for_func_call :
+func_arg :
     VAR_NAME
     |
-    expr
-    ;
-
-operations :
-    operation
+    literal
     |
-    operations operation
-    |
-
+    func_call
     ;
 
-operation :
-    var_def
-    // everything SEMICOLON
-    ;
 
 var_def :
-   VAR_NAME EXCLAMATION_MARK TYPE expr SEMICOLON
+   VAR_NAME COLON TYPE
    ;
-
-expr :
-    bool_expr
-    |
-    float_expr
-    |
-    string_expr
-    ;
-
-bool_expr : // TODO add logical expression
-    BOOL
-    ;
-
-float_expr :
-    FLOAT
-    |
-    float_expr ARITH_SIGN FLOAT
-    ;
-
-string_expr :
-    STRING
-    |
-    string_expr STRING
-    ;
-
 
 //COMMENT_START : 'COMMENT: ';
 //COMMENT_FINISH : 'NO_COMMENTS';
 
-// key words
-CALL : 'CALL';
-START : 'START'; // start of the function
-FINISH : 'FINISH'; // finish of the function
-TYPE : 'bool' | 'float' | 'string';
 
-// key symbols
+literal :
+    BOOL
+    |
+    INT
+    |
+    FLOAT
+    |
+    STRING
+    ;
+
+
+// lexems
+
+// key words
+START : 'START'; // start of the function, FROM-cycle, IF-conditiion
+FINISH : 'FINISH'; // finish of the function, FROM-cycle, IF-condition
+RETURN : 'RETURN';
+FROM : 'FROM';
+TO : 'TO';
+WITH : 'WITH';
+IF : 'IF';
+ELSE : 'ELSE';
+TYPE : 'bool' | 'int' | 'float' | 'string';
+
+
+// special symbols
 COLON : ':';
 SEMICOLON : ';';
 COMMA : ',';
 EXCLAMATION_MARK : '!';
-ARITH_SIGN : '+' | '-' | '*' | '/';
 OPEN_BRACE : '(';
 CLOSE_BRACE : ')';
+DOUBLE_QUOTE : '"';
 
-// types start
+// types
 BOOL : 'true' | 'TRUE' | 'false' | 'FALSE';
+INT : (('-')? [0-9]+);
+FLOAT : (('-')? [0-9]+) | (('-')?[0-9]+ ('.' | ',') [0-9]+);
+STRING : '"'(.)*'"';
+VOID : 'void';
 
-
-// spy
-FUNC_NAME : ([a-z] | '_') ([a-z0-9] | '_' )*;
-VAR_NAME : [A-Z][A-Z0-9]*;
-// spy
-
-
-// types finish
-FLOAT : (('-')? [0-9]+) | (('-')?[0-9]+ (('.' | ',')? [0-9]*)?);
-STRING : '"'[a-zA-Z0-9]+'"';
+FUNC_NAME : [a-z] ([a-z0-9] | '_' )*;
+VAR_NAME : [A-Z]([A-Z0-9] | '_')*;
 
 WS : [ \t\r\n]+ -> skip;
