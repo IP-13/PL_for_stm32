@@ -159,3 +159,5 @@ FUNC_NAME : [a-z] ([a-z0-9] | '_' )*;
 VAR_NAME : [A-Z]([A-Z0-9] | '_')*;
 
 WS : [ \t\r\n]+ -> skip;
+LINE_COMMENT : '//' .*? '\r'? '\n' -> skip ;
+BLOCK_COMMENT      : '/*' .*? '*/' -> skip ;
