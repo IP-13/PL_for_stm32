@@ -135,7 +135,7 @@ TO : 'TO';
 WITH : 'WITH';
 IF : 'IF';
 ELSE : 'ELSE';
-TYPE : 'bool' | 'int' | 'float' | 'string';
+TYPE : 'bool' | 'int' | 'float' | 'string' | 'pointer';
 
 
 // special symbols
@@ -146,6 +146,7 @@ EXCLAMATION_MARK : '!';
 OPEN_BRACE : '(';
 CLOSE_BRACE : ')';
 DOUBLE_QUOTE : '"';
+
 
 // types
 BOOL : 'true' | 'TRUE' | 'false' | 'FALSE';
