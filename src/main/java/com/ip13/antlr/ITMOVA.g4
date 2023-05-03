@@ -1,4 +1,5 @@
 grammar ITMOVA;
+
 program :
     statements
     ;
@@ -135,7 +136,7 @@ TO : 'TO';
 WITH : 'WITH';
 IF : 'IF';
 ELSE : 'ELSE';
-TYPE : 'bool' | 'int' | 'float' | 'string' | 'pointer';
+TYPE : 'bool' | 'int' | 'float' | 'string';
 
 
 // special symbols
