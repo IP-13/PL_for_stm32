@@ -123,7 +123,7 @@ FROM : 'FROM';
 TO : 'TO';
 WITH : 'WITH';
 IF : 'IF';
-TYPE : 'bool' | 'int' | 'float' | 'string';
+TYPE : 'bool' | 'int' | 'float' | 'string' | 'pointer';
 MAKE_YOURSELF_GREAT_AGAIN : 'MAKE_YOURSELF_GREAT_AGAIN';
 
 
