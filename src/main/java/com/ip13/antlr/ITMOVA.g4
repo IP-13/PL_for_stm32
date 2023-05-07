@@ -26,20 +26,8 @@ step :
     VAR_NAME
     ;
 
-if_else_operator :
-    if_operator (else_if_operator)* (else_operator)?
-    ;
-
 if_operator :
     IF bool_expr COLON START statements FINISH
-    ;
-
-else_if_operator :
-    ELSE IF bool_expr COLON START statements FINISH
-    ;
-
-else_operator :
-    ELSE COLON START statements FINISH
     ;
 
 bool_expr :
@@ -78,7 +66,7 @@ statement : // everything, that end with SEMICOLON or FINISH
     |
     from_cycle
     |
-    if_else_operator
+    if_operator
     |
     func_def
     |
@@ -135,8 +123,8 @@ FROM : 'FROM';
 TO : 'TO';
 WITH : 'WITH';
 IF : 'IF';
-ELSE : 'ELSE';
 TYPE : 'bool' | 'int' | 'float' | 'string';
+MAKE_YOURSELF_GREAT_AGAIN : 'MAKE_YOURSELF_GREAT_AGAIN';
 
 
 // special symbols
