@@ -4,6 +4,28 @@ program :
     statements
     ;
 
+statements :
+    statement
+    |
+    statements statement
+    |
+    // empty
+    ;
+
+statement : // everything, that end with SEMICOLON or FINISH
+    func_call SEMICOLON
+    |
+    var_def SEMICOLON
+    |
+    from_cycle
+    |
+    if_operator
+    |
+    func_def
+    |
+    RETURN VAR_NAME SEMICOLON
+    ;
+
 from_cycle :
     FROM lower_border TO upper_border WITH step COLON START statements FINISH
     ;
@@ -48,29 +70,6 @@ func_params :
 
 func_param :
     VAR_NAME COLON TYPE
-    ;
-
-statements :
-    statement
-    |
-    statements statement
-    |
-    // empty
-    ;
-
-
-statement : // everything, that end with SEMICOLON or FINISH
-    func_call SEMICOLON
-    |
-    var_def SEMICOLON
-    |
-    from_cycle
-    |
-    if_operator
-    |
-    func_def
-    |
-    RETURN VAR_NAME SEMICOLON
     ;
 
 func_call :
