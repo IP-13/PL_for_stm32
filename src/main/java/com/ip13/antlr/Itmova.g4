@@ -1,4 +1,8 @@
-grammar ITMOVA;
+grammar Itmova;
+
+@header {
+    import com.ip13.compiler.SuperClass;
+}
 
 program :
     statements
@@ -12,10 +16,10 @@ statements :
     // empty
     ;
 
-statement : // everything, that end with SEMICOLON or FINISH
+statement : // everything, that end with SEMICOLON or FINISH and entry point
     func_call SEMICOLON
     |
-    var_def SEMICOLON
+    var_def
     |
     from_cycle
     |
@@ -23,7 +27,13 @@ statement : // everything, that end with SEMICOLON or FINISH
     |
     func_def
     |
-    RETURN VAR_NAME SEMICOLON
+    entry_point
+    |
+    return_value
+    ;
+
+entry_point :
+    ENTRY_POINT {SuperClass.entryPoint($ENTRY_POINT.line);}
     ;
 
 from_cycle :
@@ -57,11 +67,11 @@ bool_expr :
     ;
 
 func_def :
-    FUNC_NAME OPEN_BRACE func_params CLOSE_BRACE COLON (TYPE | VOID) START statements FINISH
+    FUNC_NAME OPEN_BRACE func_params CLOSE_BRACE COLON return_type START statements FINISH {SuperClass.funcDef($FUNC_NAME.text, $return_type.text);}
     ;
 
 func_params :
-    func_param {System.out.println($1);}
+    func_param
     |
     func_params COMMA func_param
     |
@@ -69,7 +79,7 @@ func_params :
     ;
 
 func_param :
-    VAR_NAME COLON TYPE
+    VAR_NAME COLON TYPE {SuperClass.funcParam($VAR_NAME.text, $TYPE.text);}
     ;
 
 func_call :
@@ -92,14 +102,20 @@ func_arg :
     func_call
     ;
 
+// function overloading or
+return_value :
+    RETURN (VAR_NAME | literal | func_call) SEMICOLON
+    ;
+
+return_type :
+    TYPE
+    |
+    VOID
+    ;
 
 var_def :
-   VAR_NAME COLON TYPE
+   VAR_NAME COLON TYPE SEMICOLON {SuperClass.varDef($VAR_NAME.text, $TYPE.text);}
    ;
-
-//COMMENT_START : 'COMMENT: ';
-//COMMENT_FINISH : 'NO_COMMENTS';
-
 
 literal :
     BOOL
@@ -112,8 +128,6 @@ literal :
     ;
 
 
-// lexems
-
 // key words
 START : 'START'; // start of the function, FROM-cycle, IF-conditiion
 FINISH : 'FINISH'; // finish of the function, FROM-cycle, IF-condition
@@ -123,8 +137,7 @@ TO : 'TO';
 WITH : 'WITH';
 IF : 'IF';
 TYPE : 'bool' | 'int' | 'float' | 'string' | 'pointer';
-MAKE_YOURSELF_GREAT_AGAIN : 'MAKE_YOURSELF_GREAT_AGAIN';
-
+ENTRY_POINT : 'MAIN';
 
 // special symbols
 COLON : ':';

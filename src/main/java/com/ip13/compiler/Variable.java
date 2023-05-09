@@ -1,20 +1,20 @@
 package com.ip13.compiler;
 
 public class Variable {
-    private VarType varType;
+    private Type type;
     private String value;
 
-    public Variable(VarType varType, String value) {
-        this.varType = varType;
+    public Variable(Type type, String value) {
+        this.type = type;
         this.value = value;
     }
 
-    public VarType getVarType() {
-        return varType;
+    public Type getVarType() {
+        return type;
     }
 
-    public void setVarType(VarType varType) {
-        this.varType = varType;
+    public void setVarType(Type type) {
+        this.type = type;
     }
 
     public String getValue() {
