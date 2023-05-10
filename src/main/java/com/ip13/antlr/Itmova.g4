@@ -2,6 +2,7 @@ grammar Itmova;
 
 @header {
     import com.ip13.compiler.SuperClass;
+    import com.ip13.compiler.Type;
 }
 
 program :
@@ -70,6 +71,20 @@ func_def :
     FUNC_NAME OPEN_BRACE func_params CLOSE_BRACE COLON return_type START statements FINISH {SuperClass.funcDef($FUNC_NAME.text, $return_type.text);}
     ;
 
+return_type :
+    TYPE
+    |
+    VOID
+    ;
+
+return_value :
+    RETURN literal SEMICOLON {SuperClass.returnValueLiteral();}
+    |
+    RETURN VAR_NAME SEMICOLON {SuperClass.returnValueVariable($VAR_NAME.text);}
+    |
+    RETURN func_call SEMICOLON {SuperClass.returnValueFuncCall();}
+    ;
+
 func_params :
     func_param
     |
@@ -83,7 +98,7 @@ func_param :
     ;
 
 func_call :
-    FUNC_NAME OPEN_BRACE func_args CLOSE_BRACE
+    FUNC_NAME OPEN_BRACE func_args CLOSE_BRACE {SuperClass.funcCall($FUNC_NAME.text);}
     ;
 
 func_args :
@@ -95,22 +110,11 @@ func_args :
     ;
 
 func_arg :
-    VAR_NAME
+    literal {SuperClass.funcArgLiteral();}
     |
-    literal
+    VAR_NAME {SuperClass.funcArgVariable($VAR_NAME.text);}
     |
-    func_call
-    ;
-
-// function overloading or
-return_value :
-    RETURN (VAR_NAME | literal | func_call) SEMICOLON
-    ;
-
-return_type :
-    TYPE
-    |
-    VOID
+    func_call {SuperClass.funcArgFuncCall();}
     ;
 
 var_def :
@@ -118,13 +122,13 @@ var_def :
    ;
 
 literal :
-    BOOL
+    BOOL {SuperClass.literal($BOOL.text, Type.BOOL, $BOOL.line);}
     |
-    INT
+    INT {SuperClass.literal($INT.text, Type.INT, $INT.line);}
     |
-    FLOAT
+    FLOAT {SuperClass.literal($FLOAT.text, Type.FLOAT, $FLOAT.line);}
     |
-    STRING
+    STRING {SuperClass.literal($STRING.text, Type.STRING, $STRING.line);}
     ;
 
 

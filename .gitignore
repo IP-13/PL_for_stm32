@@ -1,2 +1,5 @@
 .idea
 target
+Forth_like_mova_for_STM32.iml
+src/main/java/com/ip13/antlr/*
+!src/main/java/com/ip13/antlr/Itmova.g4

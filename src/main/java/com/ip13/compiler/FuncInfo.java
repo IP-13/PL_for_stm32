@@ -1,37 +1,18 @@
 package com.ip13.compiler;
 
-import org.antlr.v4.runtime.misc.Pair;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class FuncInfo {
     private String name;
     private int start; // start addr in byte-code
     private Type funcType;
-    private List<Pair<String, Type>> varList; // var_name, var_type
 
-    public FuncInfo() {
-        this.varList = new ArrayList<>();
-    }
-
-    public FuncInfo(String name, String funcType) {
+    public FuncInfo(String name, int start, Type funcType) {
         this.name = name;
-        this.funcType = Type.strValue(funcType);
-        this.varList = new ArrayList<>();
-    }
-
-    public void addParam(String paramName, String paramType) {
-        varList.add(new Pair<>(paramName, Type.strValue(paramType)));
+        this.start = start;
+        this.funcType = funcType;
     }
 
     public void show() {
-        System.out.print("Name: " + name +
-                " Start: " + start +
-                " Num of args: " + varList.size() +
-                " Func type: " + funcType.label + " Var list: ");
-        varList.forEach(var -> System.out.print("var name: " + var.a + " var type: " + var.b.label));
-        System.out.println();
+        System.out.println("Name: " + name + " Start: " + start + " Func type: " + funcType.label + " Var list: ");
     }
 
     public String getName() {

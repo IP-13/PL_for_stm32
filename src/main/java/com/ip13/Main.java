@@ -12,36 +12,39 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """
-                        my_func(A: int) : int   
-                        START
-                        RETURN A;
-                        FINISH
-                        
-                        my_func2(A : int) : int
-                        START
-                        RETURN 2;
-                        FINISH
-                        
-                        my_func3(A : int) : int
-                        START
-                        
-                        RETURN sum(A, 2);
-                        
-                        
-                        
-                        FINISH
-                        
-                        
-                        MAIN
-                        A : float;
-                        B : string;
-                        C : int;
-                        print(A);
-                        sum(A, 10);
-                        """;
+                my_func(A: int) : int   
+                START
+                B : string;
+                C : int;
+                RETURN A;
+                FINISH
+                                        
+                my_func2(A : int) : int
+                START
+                RETURN 2;
+                FINISH
+                                        
+                my_func3(A : int) : int
+                START
+                                        
+                RETURN sum(A, 2);
+                                        
+                                        
+                                        
+                FINISH
+                                        
+                                        
+                MAIN
+                A : float;
+                B : string;
+                C : int;
+                print(A);
+                sum(A, 10);
+                """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -50,12 +53,16 @@ public class Main {
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(new ItmovaBaseListener(), tree);
 
+
+        System.out.println("_______________________________________________");
+        System.out.println("Var map: ");
         SuperClass.showVarMap();
-
-
+        System.out.println("_______________________________________________");
+        System.out.println("Func list: ");
         SuperClass.showFuncList();
-
-
+        System.out.println("_______________________________________________");
+        System.out.println("Byte code: ");
+        SuperClass.showByteCode();
     }
 }
 
