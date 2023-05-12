@@ -38,6 +38,10 @@ public class SuperClass {
     }
 
 
+    public static void showByteCodeInNumberFormat() {
+        byteCodeInNumberFormat.forEach(System.out::println);
+    }
+
     // antlr rules
 
     public static void program() {
@@ -58,6 +62,10 @@ public class SuperClass {
     public static void entryPoint(int line) {
         varMap = new HashMap<>(); // new scope of global vars starts with program entry point
         entryPoint = line;
+
+        byteCode.add("MAIN"); // TODO
+
+        byteCodeInNumberFormat.add("MAIN"); // TODO come up with a name to this command in number format
     }
 
 
@@ -106,11 +114,11 @@ public class SuperClass {
         lastFunc.setName(name);
         lastFunc.setType(Type.strValue(type));
 
-        byteCode.add(lastFunc.getStart(), type);
         byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
+        byteCode.add(lastFunc.getStart(), type);
 
-        byteCodeInNumberFormat.add(lastFunc.getStart(), Type.strValue(type).getNumberFormat());
         byteCodeInNumberFormat.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
+        byteCodeInNumberFormat.add(lastFunc.getStart(), Type.strValue(type).getNumberFormat());
     }
 
 
@@ -122,17 +130,17 @@ public class SuperClass {
 
 
     public static void returnValueVariable(String varName) {
-        byteCode.add(ByteCodeCommands.var.toString());
+        byteCode.add(ByteCodeCommands.rvar.toString());
         byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
 
-        byteCodeInNumberFormat.add(ByteCodeCommands.var.getNumberFormat());
+        byteCodeInNumberFormat.add(ByteCodeCommands.rvar.getNumberFormat());
         byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
     }
 
 
     public static void returnValueLiteral() {
-        byteCode.add(byteCode.size() - 1, ByteCodeCommands.lit.toString());
-        byteCodeInNumberFormat.add(byteCode.size() - 1, ByteCodeCommands.lit.getNumberFormat());
+        byteCode.add(byteCode.size() - 2, ByteCodeCommands.rlit.toString());
+        byteCodeInNumberFormat.add(byteCode.size() - 2, ByteCodeCommands.rlit.getNumberFormat());
     }
 
 
@@ -178,7 +186,7 @@ public class SuperClass {
         byteCode.add(String.valueOf(varMap.get(name).getIndex()));
 
         byteCodeInNumberFormat.add(ByteCodeCommands.var.getNumberFormat());
-        byteCode.add(String.valueOf(varMap.get(name).getIndex()));
+        byteCodeInNumberFormat.add(String.valueOf(varMap.get(name).getIndex()));
     }
 
 
@@ -192,10 +200,8 @@ public class SuperClass {
         varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
 
         byteCode.add(type);
-        byteCode.add(String.valueOf(varMap.size() - 1));
 
         byteCodeInNumberFormat.add(Type.strValue(type).getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(varMap.size() - 1));
     }
 
 

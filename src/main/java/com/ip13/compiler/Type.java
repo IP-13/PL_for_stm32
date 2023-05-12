@@ -1,11 +1,11 @@
 package com.ip13.compiler;
 
 public enum Type {
-    BLN("bool"),
+    BOOL("bool"),
     INT("int"),
-    FLT("float"),
-    STR("string"),
-    PTR("pointer"),
+    FLOAT("float"),
+    STRING("string"),
+    POINTER("pointer"),
     VOID("void");
 
     private final String numberFormat;
@@ -19,6 +19,28 @@ public enum Type {
     }
 
     public String getNumberFormat() {
-        return numberFormat;
+        switch (this) {
+            case BOOL -> {
+                return "200";
+            }
+            case INT -> {
+                return "201";
+            }
+            case FLOAT -> {
+                return "202";
+            }
+            case STRING -> {
+                return "203";
+            }
+            case POINTER -> {
+                return "204";
+            }
+            case VOID -> {
+                return "205";
+            }
+            default -> {
+                return "ERROR";
+            }
+        }
     }
 }

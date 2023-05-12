@@ -116,13 +116,13 @@ var_def :
    ;
 
 literal :
-    BOOL {SuperClass.literal($BOOL.text, Type.BLN, $BOOL.line);}
+    BOOL {SuperClass.literal($BOOL.text, Type.BOOL, $BOOL.line);}
     |
     INT {SuperClass.literal($INT.text, Type.INT, $INT.line);}
     |
-    FLOAT {SuperClass.literal($FLOAT.text, Type.FLT, $FLOAT.line);}
+    FLOAT {SuperClass.literal($FLOAT.text, Type.FLOAT, $FLOAT.line);}
     |
-    STRING {SuperClass.literal($STRING.text, Type.STR, $STRING.line);}
+    STRING {SuperClass.literal($STRING.text, Type.STRING, $STRING.line);}
     ;
 
 

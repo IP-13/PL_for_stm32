@@ -13,7 +13,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """
-                my_func(A: int, B : int) : int   
+                my_func(A: int) : pointer   
                 START
                 B : string;
                 C : int;
@@ -22,7 +22,7 @@ public class Main {
                                         
                 my_func2() : int
                 START
-                RETURN 2;
+                RETURN "saklfj;asjflk;fsakfsiweorupiso;fj";
                 FINISH
                                         
                 my_func3(A : int) : int
@@ -51,13 +51,11 @@ public class Main {
         walker.walk(new ItmovaBaseListener(), tree);
 
 
-        System.out.println("_______________________________________________");
-        SuperClass.showVarMap();
-        System.out.println("_______________________________________________");
-        SuperClass.showFuncList();
+
         System.out.println("_______________________________________________");
         SuperClass.showByteCode();
-
+        System.out.println("_______________________________________________");
+        SuperClass.showByteCodeInNumberFormat();
     }
 }
 
