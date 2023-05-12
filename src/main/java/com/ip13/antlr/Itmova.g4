@@ -41,30 +41,24 @@ from_cycle :
     FROM lower_border TO upper_border WITH step COLON START statements FINISH
     ;
 
-lower_border :
-    INT
-    |
-    VAR_NAME
+step :
+    INT {SuperClass.step($INT.text);}
     ;
 
 upper_border :
-    INT
-    |
-    VAR_NAME
+    INT {SuperClass.upperBorder($INT.text);}
     ;
 
-step :
-    INT
-    |
-    VAR_NAME
+lower_border :
+    INT {SuperClass.lowerBorder($INT.text);}
     ;
 
 if_operator :
-    IF bool_expr COLON START statements FINISH
+    IF bool_expr COLON START statements FINISH {SuperClass.ifOperator();}
     ;
 
 bool_expr :
-    func_call
+    func_call {SuperClass.boolExpr();}
     ;
 
 func_def :
@@ -90,7 +84,7 @@ func_params :
     |
     func_params COMMA func_param
     |
-    // empty
+    {SuperClass.funcParams();} // func has none params
     ;
 
 func_param :
@@ -122,13 +116,13 @@ var_def :
    ;
 
 literal :
-    BOOL {SuperClass.literal($BOOL.text, Type.BOOL, $BOOL.line);}
+    BOOL {SuperClass.literal($BOOL.text, Type.BLN, $BOOL.line);}
     |
     INT {SuperClass.literal($INT.text, Type.INT, $INT.line);}
     |
-    FLOAT {SuperClass.literal($FLOAT.text, Type.FLOAT, $FLOAT.line);}
+    FLOAT {SuperClass.literal($FLOAT.text, Type.FLT, $FLOAT.line);}
     |
-    STRING {SuperClass.literal($STRING.text, Type.STRING, $STRING.line);}
+    STRING {SuperClass.literal($STRING.text, Type.STR, $STRING.line);}
     ;
 
 
@@ -154,7 +148,7 @@ DOUBLE_QUOTE : '"';
 
 
 // types
-BOOL : 'true' | 'TRUE' | 'false' | 'FALSE';
+BOOL : 'TRUE' | 'FALSE';
 INT : (('-')? [0-9]+);
 FLOAT : (('-')? [0-9]+) | (('-')?[0-9]+ ('.' | ',') [0-9]+);
 STRING : '"'(.)*'"';

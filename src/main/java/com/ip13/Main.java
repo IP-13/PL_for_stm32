@@ -9,21 +9,18 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """
-                my_func(A: int) : int   
+                my_func(A: int, B : int) : int   
                 START
                 B : string;
                 C : int;
                 RETURN A;
                 FINISH
                                         
-                my_func2(A : int) : int
+                my_func2() : int
                 START
                 RETURN 2;
                 FINISH
@@ -55,14 +52,12 @@ public class Main {
 
 
         System.out.println("_______________________________________________");
-        System.out.println("Var map: ");
         SuperClass.showVarMap();
         System.out.println("_______________________________________________");
-        System.out.println("Func list: ");
         SuperClass.showFuncList();
         System.out.println("_______________________________________________");
-        System.out.println("Byte code: ");
         SuperClass.showByteCode();
+
     }
 }
 

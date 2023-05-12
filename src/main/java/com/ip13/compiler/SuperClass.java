@@ -7,9 +7,13 @@ import java.util.Map;
 
 public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
+    private static final List<String> byteCodeInNumberFormat = new ArrayList<>();
     private static final List<FuncInfo> funcList = new ArrayList<>();
     private static Map<String, VarInfo> varMap = new HashMap();
     private static int entryPoint = 0; //
+
+    private static int lowerBound;
+    private static int upperBound;
 
     public static void showVarMap() {
         varMap.forEach((name, varInfo) -> System.out.println("Name : " + name + " Type : " + varInfo.getType() + " Index: " + varInfo.getIndex()));
@@ -53,9 +57,6 @@ public class SuperClass {
 
     public static void entryPoint(int line) {
         varMap = new HashMap<>(); // new scope of global vars starts with program entry point
-
-
-        System.out.println("Program start at line: " + line);
         entryPoint = line;
     }
 
@@ -65,18 +66,25 @@ public class SuperClass {
     }
 
 
-    public static void lowerBorder() {
+    public static void step(String value) {
+        int step = Integer.parseInt(value);
+        int counter = (upperBound - lowerBound) / step;
 
+        byteCode.add(ByteCodeCommands.loop.toString());
+        byteCode.add(String.valueOf(counter));
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.loop.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(counter));
     }
 
 
-    public static void upperBorder() {
-
+    public static void upperBorder(String value) {
+        upperBound = Integer.parseInt(value);
     }
 
 
-    public static void step() {
-
+    public static void lowerBorder(String value) {
+        lowerBound = Integer.parseInt(value);
     }
 
 
@@ -86,84 +94,118 @@ public class SuperClass {
 
 
     public static void boolExpr() {
+        byteCode.add(ByteCodeCommands.jt.toString());
 
+        byteCodeInNumberFormat.add(ByteCodeCommands.jt.getNumberFormat());
     }
 
 
     public static void funcDef(String name, String type) {
-        varMap = new HashMap<>(); // new scope starts with new func def
-        funcList.add(new FuncInfo(name, byteCode.size(), Type.strValue(type)));
+        FuncInfo lastFunc = funcList.get(funcList.size() - 1);
 
+        lastFunc.setName(name);
+        lastFunc.setType(Type.strValue(type));
+
+        byteCode.add(lastFunc.getStart(), type);
+        byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
+
+        byteCodeInNumberFormat.add(lastFunc.getStart(), Type.strValue(type).getNumberFormat());
+        byteCodeInNumberFormat.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
     }
 
 
     public static void returnValueFuncCall() {
-        byteCode.add("Return");
-        byteCode.add("Value returns by func call");
+        byteCode.add(ByteCodeCommands.rofc.toString());
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.rofc.getNumberFormat());
     }
 
 
     public static void returnValueVariable(String varName) {
-        byteCode.add("Return");
-        byteCode.add("Value returns by variable");
-        byteCode.add("Name: " + varName + " Index: " + String.valueOf(varMap.get(varName).getIndex()));
+        byteCode.add(ByteCodeCommands.var.toString());
+        byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.var.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
     }
 
 
     public static void returnValueLiteral() {
-        byteCode.add(byteCode.size() - 1, "Return");
-        byteCode.add(byteCode.size() - 1, "Value returns by literal");
-
+        byteCode.add(byteCode.size() - 1, ByteCodeCommands.lit.toString());
+        byteCodeInNumberFormat.add(byteCode.size() - 1, ByteCodeCommands.lit.getNumberFormat());
     }
 
 
     public static void funcParams() {
-
+        varMap = new HashMap<>(); // new scope starts with new func def
+        funcList.add(new FuncInfo(null, byteCode.size(), null, 0));
     }
 
 
     public static void funcParam(String name, String type) {
+        if (funcList.size() == 0 || funcList.get(funcList.size() - 1).getName() != null) { // second condition means that previous function reached top rule: func def
+            varMap = new HashMap<>(); // new scope starts with new func def
+            funcList.add(new FuncInfo(null, byteCode.size(), null, 0));
+        }
+
         varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
-        byteCode.add("Func param " + varMap.size() + " name: " + name + " Type: " + type);
+        funcList.get(funcList.size() - 1).incNumOfParams();
+
+        byteCode.add(Type.strValue(type).toString());
+
+        byteCodeInNumberFormat.add(Type.strValue(type).getNumberFormat());
     }
 
 
     public static void funcCall(String funcName) {
-        byteCode.add("Func is called");
-        byteCode.add(funcName);
-    }
+        byteCode.add(ByteCodeCommands.call.toString());
+        byteCode.add(String.valueOf(funcList.stream().findFirst().orElse(null).getStart()));
 
 
-    public static void funcArgs() {
-
+        byteCodeInNumberFormat.add(ByteCodeCommands.call.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(funcList.stream().findFirst().orElse(null).getStart()));
     }
 
 
     public static void funcArgFuncCall() {
-        byteCode.add("Arg is passed through func call");
+        byteCode.add(ByteCodeCommands.ofc.toString());
+        byteCodeInNumberFormat.add(ByteCodeCommands.ofc.getNumberFormat());
     }
 
 
     public static void funcArgVariable(String name) {
-        byteCode.add("Arg is passed through variable");
-        byteCode.add("Name: " + name + " Index: " + String.valueOf(varMap.get(name).getIndex()));
+        byteCode.add(ByteCodeCommands.var.toString());
+        byteCode.add(String.valueOf(varMap.get(name).getIndex()));
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.var.getNumberFormat());
+        byteCode.add(String.valueOf(varMap.get(name).getIndex()));
     }
 
 
     public static void funcArgLiteral() {
-        byteCode.add(byteCode.size() - 1, "Arg is passed through literal");
+        byteCode.add(byteCode.size() - 1, ByteCodeCommands.lit.toString());
+        byteCodeInNumberFormat.add(byteCode.size() - 1, ByteCodeCommands.lit.getNumberFormat());
     }
 
 
     public static void varDef(String name, String type) {
         varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
 
-        byteCode.add("Var is defined. Name: " + name + " Type: " + type + " Index: " + (varMap.size() - 1));
+        byteCode.add(type);
+        byteCode.add(String.valueOf(varMap.size() - 1));
+
+        byteCodeInNumberFormat.add(Type.strValue(type).getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(varMap.size() - 1));
     }
 
 
     public static void literal(String literal, Type type, int line) {
-        byteCode.add("Literal at line: " + line + " Type: " + type + " Value: " + literal);
+        byteCode.add(type.toString());
+        byteCode.add(literal);
+
+
+        byteCodeInNumberFormat.add(type.getNumberFormat());
+        byteCodeInNumberFormat.add(literal);
 //        switch (type) {
 //            case BOOL -> {
 //
