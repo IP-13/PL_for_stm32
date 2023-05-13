@@ -4,16 +4,13 @@ import java.util.*;
 
 public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
-    private static final List<String> byteCodeInNumberFormat = new ArrayList<>();
     private static final List<FuncInfo> funcList = new ArrayList<>();
     private static Map<String, VarInfo> varMap = new HashMap();
     private static int entryPoint = 0; //
-
-
     private static Stack<Integer> fromCycleStack = new Stack<>();
-
     private static Stack<Integer> ifOperatorStack = new Stack<>();
 
+    
     public static void showVarMap() {
         varMap.forEach((name, varInfo) -> System.out.println("Name : " + name + " Type : " + varInfo.getType() + " Index: " + varInfo.getIndex()));
     }
@@ -37,11 +34,6 @@ public class SuperClass {
     }
 
 
-    public static void showByteCodeInNumberFormat() {
-        byteCodeInNumberFormat.forEach(System.out::println);
-    }
-
-
 //    public static void changeStringLitToNumberFormat() {
 //        byteCodeInNumberFormat.stream().filter().forEach();
 //    }
@@ -52,8 +44,6 @@ public class SuperClass {
 
     public static void program() {
         byteCode.add(ByteCodeCommands.exit.toString());
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.exit.getNumberFormat());
     }
 
 
@@ -70,22 +60,15 @@ public class SuperClass {
     public static void entryPoint(int line) {
         varMap = new HashMap<>(); // new scope of global vars starts with program entry point
         entryPoint = byteCode.size();
-
         byteCode.add("MAIN start at " + entryPoint);
-
-        byteCodeInNumberFormat.add("MAIN starts at " + entryPoint);
     }
 
 
     public static void fromCycle() {
         int counterAddr = fromCycleStack.pop();
         int currAddr = byteCode.size(); // addr of first command after last fromCycle command
-
         byteCode.add(ByteCodeCommands.jdec.toString());
         byteCode.add(String.valueOf(counterAddr - (currAddr + 1))); // after adding jdec command curr addr increased by 1
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.jdec.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(counterAddr - (currAddr + 1)));
     }
 
 
@@ -93,11 +76,6 @@ public class SuperClass {
         byteCode.add(ByteCodeCommands.fint.toString());
         byteCode.add(lit);
         byteCode.add("counter");
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.fint.getNumberFormat());
-        byteCodeInNumberFormat.add(lit);
-        byteCodeInNumberFormat.add("0");
-
         fromCycleStack.add(byteCode.size() - 1);
     }
 
@@ -106,29 +84,18 @@ public class SuperClass {
         byteCode.add(ByteCodeCommands.fvar.toString());
         byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
         byteCode.add("counter");
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.fvar.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
-        byteCodeInNumberFormat.add("0");
-
         fromCycleStack.add(byteCode.size() - 1);
     }
 
     public static void upperBorderInt(String lit) {
         byteCode.add(ByteCodeCommands.fint.toString());
         byteCode.add(lit);
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.fint.getNumberFormat());
-        byteCodeInNumberFormat.add(lit);
     }
 
 
     public static void upperBorderVar(String varName) {
         byteCode.add(ByteCodeCommands.fvar.toString());
         byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.fvar.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
     }
 
 
@@ -136,10 +103,6 @@ public class SuperClass {
         byteCode.add(ByteCodeCommands.loop.toString());
         byteCode.add(ByteCodeCommands.fint.toString());
         byteCode.add(lit);
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.loop.getNumberFormat());
-        byteCodeInNumberFormat.add(ByteCodeCommands.fint.getNumberFormat());
-        byteCodeInNumberFormat.add(lit);
     }
 
 
@@ -147,69 +110,46 @@ public class SuperClass {
         byteCode.add(ByteCodeCommands.loop.toString());
         byteCode.add(ByteCodeCommands.fvar.toString());
         byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.loop.getNumberFormat());
-        byteCodeInNumberFormat.add(ByteCodeCommands.fvar.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
     }
 
 
     public static void ifOperator() {
         int jtAddr = ifOperatorStack.pop();
         int currAddr = byteCode.size();
-
         String addrToJt = String.valueOf(currAddr - jtAddr);
-
         byteCode.set(jtAddr, addrToJt);
-
-        byteCodeInNumberFormat.set(jtAddr, addrToJt);
     }
 
 
     public static void boolExpr() {
         byteCode.add(ByteCodeCommands.jt.toString());
         byteCode.add("stub for address to jump if condition is false");
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.jt.getNumberFormat());
-        byteCodeInNumberFormat.add("stub for address to jump if condition is false");
-
         ifOperatorStack.add(byteCode.size() - 1);
     }
 
 
     public static void funcDef(String name, String type) {
         FuncInfo lastFunc = funcList.get(funcList.size() - 1);
-
         lastFunc.setName(name);
         lastFunc.setType(Type.strValue(type));
-
         byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
         byteCode.add(lastFunc.getStart(), type);
-
-        byteCodeInNumberFormat.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
-        byteCodeInNumberFormat.add(lastFunc.getStart(), Type.strValue(type).getNumberFormat());
     }
 
 
     public static void returnValueFuncCall() {
         byteCode.add(ByteCodeCommands.rofc.toString());
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.rofc.getNumberFormat());
     }
 
 
     public static void returnValueVariable(String varName) {
         byteCode.add(ByteCodeCommands.rvar.toString());
         byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.rvar.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
     }
 
 
     public static void returnValueLiteral() {
         byteCode.add(byteCode.size() - 2, ByteCodeCommands.rlit.toString());
-        byteCodeInNumberFormat.add(byteCode.size() - 2, ByteCodeCommands.rlit.getNumberFormat());
     }
 
 
@@ -227,60 +167,41 @@ public class SuperClass {
 
         varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
         funcList.get(funcList.size() - 1).incNumOfParams();
-
         byteCode.add(Type.strValue(type).getLabel());
-
-        byteCodeInNumberFormat.add(Type.strValue(type).getNumberFormat());
     }
 
 
     public static void funcCall(String funcName) {
         byteCode.add(ByteCodeCommands.call.toString());
         byteCode.add(String.valueOf(funcList.stream().findFirst().orElse(null).getStart()));
-
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.call.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(funcList.stream().findFirst().orElse(null).getStart()));
     }
 
 
     public static void funcArgFuncCall() {
         byteCode.add(ByteCodeCommands.ofc.toString());
-        byteCodeInNumberFormat.add(ByteCodeCommands.ofc.getNumberFormat());
     }
 
 
     public static void funcArgVariable(String name) {
         byteCode.add(ByteCodeCommands.var.toString());
         byteCode.add(String.valueOf(varMap.get(name).getIndex()));
-
-        byteCodeInNumberFormat.add(ByteCodeCommands.var.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(varMap.get(name).getIndex()));
     }
 
 
     public static void funcArgLiteral() {
         byteCode.add(byteCode.size() - 2, ByteCodeCommands.lit.toString());
-
-        byteCodeInNumberFormat.add(byteCode.size() - 2, ByteCodeCommands.lit.getNumberFormat());
     }
 
 
     public static void varDef(String name, String type) {
         varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
-
         byteCode.add(type);
-
-        byteCodeInNumberFormat.add(Type.strValue(type).getNumberFormat());
     }
 
 
     public static void literal(String literal, Type type, int line) {
         byteCode.add(type.getLabel());
         byteCode.add(literal);
-
-        byteCodeInNumberFormat.add(type.getNumberFormat());
-        byteCodeInNumberFormat.add(literal);
     }
 
 }

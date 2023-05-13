@@ -44,12 +44,7 @@ public class Main {
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(new ItmovaBaseListener(), tree);
 
-
-
-        System.out.println("_______________________________________________");
         SuperClass.showByteCode();
-        System.out.println("_______________________________________________");
-        SuperClass.showByteCodeInNumberFormat();
     }
 }
 

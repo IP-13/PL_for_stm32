@@ -23,7 +23,6 @@ public enum ByteCodeCommands {
     // TODO itmova-core
 
 
-
     private final String numberFormat;
 
     ByteCodeCommands(String numberFormat) {
