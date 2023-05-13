@@ -15,36 +15,16 @@ public class Main {
         String program = """
                 my_func(A: int) : pointer   
                 START
-                B : string;
-                C : int;
+                FROM 1 TO 5 WITH 2:
+                START
+                AA : float;
+                BB : int;
+                CC : string;
+                FINISH
                 RETURN A;
-                FINISH
-                                        
-                my_func2() : int
-                START
-                I: int;
-                
-                FROM 5 TO 10 WITH 3:
-                START
-                my_func(I);
-                FINISH
-                RETURN "saklfj;asjflk;fsakfsiweorupiso;fj";
-                FINISH
-                                        
-                my_func3(A : int) : int
-                START
-                                        
-                RETURN sum(A, 2);
-                                        
-                                        
-                                        
-                FINISH
-                                        
-                                        
+                FINISH                  
                 MAIN
                 A : float;
-                B : string;
-                C : int;
                 print(A);
                 sum(A, 10);
                 """;

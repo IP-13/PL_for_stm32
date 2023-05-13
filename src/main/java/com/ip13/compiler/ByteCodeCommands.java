@@ -6,6 +6,8 @@ public enum ByteCodeCommands {
     jdec ("2"),
     jret ("3"),
     loop ("10"),
+    fint("11"),
+    fvar("12"),
     jt ("20"),
     call ("100"),
     lit ("110"),
@@ -19,6 +21,8 @@ public enum ByteCodeCommands {
     FLT ("202"),
     STR ("203");
     // TODO itmova-core
+
+
 
     private final String numberFormat;
 

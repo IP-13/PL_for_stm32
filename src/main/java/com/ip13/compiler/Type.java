@@ -8,15 +8,23 @@ public enum Type {
     POINTER("pointer"),
     VOID("void");
 
-    private final String numberFormat;
+    private final String label;
 
-    Type(String numberFormat) {
-        this.numberFormat = numberFormat;
+
+    Type(String label) {
+        this.label = label;
     }
+
+
+    public String getLabel() {
+        return label;
+    }
+
 
     public static Type strValue(String label) {
         return Type.valueOf(label.toUpperCase());
     }
+
 
     public String getNumberFormat() {
         switch (this) {

@@ -38,19 +38,25 @@ entry_point :
     ;
 
 from_cycle :
-    FROM lower_border TO upper_border WITH step COLON START statements FINISH
+    FROM lower_border TO upper_border WITH step COLON START statements FINISH {SuperClass.fromCycle();}
     ;
 
 step :
-    INT {SuperClass.step($INT.text);}
+    INT {SuperClass.stepInt($INT.text);}
+    |
+    VAR_NAME {SuperClass.stepVar($VAR_NAME.text);}
     ;
 
 upper_border :
-    INT {SuperClass.upperBorder($INT.text);}
+    INT {SuperClass.upperBorderInt($INT.text);}
+    |
+    VAR_NAME {SuperClass.upperBorderVar($VAR_NAME.text);}
     ;
 
 lower_border :
-    INT {SuperClass.lowerBorder($INT.text);}
+    INT {SuperClass.lowerBorderInt($INT.text);}
+    |
+    VAR_NAME {SuperClass.lowerBorderVar($VAR_NAME.text);}
     ;
 
 if_operator :

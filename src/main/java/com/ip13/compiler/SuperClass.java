@@ -1,9 +1,6 @@
 package com.ip13.compiler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
@@ -12,8 +9,10 @@ public class SuperClass {
     private static Map<String, VarInfo> varMap = new HashMap();
     private static int entryPoint = 0; //
 
-    private static int lowerBound;
-    private static int upperBound;
+
+    private static Stack<Integer> fromCycleStack = new Stack<>();
+
+    private static Stack<Integer> ifOperatorStack = new Stack<>();
 
     public static void showVarMap() {
         varMap.forEach((name, varInfo) -> System.out.println("Name : " + name + " Type : " + varInfo.getType() + " Index: " + varInfo.getIndex()));
@@ -42,6 +41,12 @@ public class SuperClass {
         byteCodeInNumberFormat.forEach(System.out::println);
     }
 
+
+//    public static void changeStringLitToNumberFormat() {
+//        byteCodeInNumberFormat.stream().filter().forEach();
+//    }
+
+
     // antlr rules
 
     public static void program() {
@@ -61,38 +66,88 @@ public class SuperClass {
 
     public static void entryPoint(int line) {
         varMap = new HashMap<>(); // new scope of global vars starts with program entry point
-        entryPoint = line;
+        entryPoint = byteCode.size();
 
-        byteCode.add("MAIN"); // TODO
+        byteCode.add("MAIN start at " + entryPoint);
 
-        byteCodeInNumberFormat.add("MAIN"); // TODO come up with a name to this command in number format
+        byteCodeInNumberFormat.add("MAIN starts at " + entryPoint);
     }
 
 
     public static void fromCycle() {
+        int counterAddr = fromCycleStack.pop();
+        int currAddr = byteCode.size() - 1;
 
+        byteCode.add(ByteCodeCommands.jdec.toString());
+        byteCode.add(String.valueOf(counterAddr - (currAddr + 1))); // after adding jdec command curr addr increased by 1
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.jdec.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(counterAddr - (currAddr + 1)));
     }
 
 
-    public static void step(String value) {
-        int step = Integer.parseInt(value);
-        int counter = (upperBound - lowerBound) / step;
+    public static void stepInt(String lit) {
+        byteCode.add(ByteCodeCommands.fint.toString());
+        byteCode.add(lit);
+        byteCode.add("counter");
 
+        byteCodeInNumberFormat.add(ByteCodeCommands.fint.getNumberFormat());
+        byteCodeInNumberFormat.add(lit);
+        byteCodeInNumberFormat.add("0");
+
+        fromCycleStack.add(byteCode.size() - 1);
+    }
+
+
+    public static void stepVar(String varName) {
+        byteCode.add(ByteCodeCommands.fvar.toString());
+        byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
+        byteCode.add("counter");
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.fvar.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
+        byteCodeInNumberFormat.add("0");
+
+        fromCycleStack.add(byteCode.size() - 1);
+    }
+
+    public static void upperBorderInt(String lit) {
+        byteCode.add(ByteCodeCommands.fint.toString());
+        byteCode.add(lit);
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.fint.getNumberFormat());
+        byteCodeInNumberFormat.add(lit);
+    }
+
+
+    public static void upperBorderVar(String varName) {
+        byteCode.add(ByteCodeCommands.fvar.toString());
+        byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.fvar.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
+    }
+
+
+    public static void lowerBorderInt(String lit) {
         byteCode.add(ByteCodeCommands.loop.toString());
-        byteCode.add(String.valueOf(counter));
+        byteCode.add(ByteCodeCommands.fint.toString());
+        byteCode.add(lit);
 
         byteCodeInNumberFormat.add(ByteCodeCommands.loop.getNumberFormat());
-        byteCodeInNumberFormat.add(String.valueOf(counter));
+        byteCodeInNumberFormat.add(ByteCodeCommands.fint.getNumberFormat());
+        byteCodeInNumberFormat.add(lit);
     }
 
 
-    public static void upperBorder(String value) {
-        upperBound = Integer.parseInt(value);
-    }
+    public static void lowerBorderVar(String varName) {
+        byteCode.add(ByteCodeCommands.loop.toString());
+        byteCode.add(ByteCodeCommands.fvar.toString());
+        byteCode.add(String.valueOf(varMap.get(varName).getIndex()));
 
-
-    public static void lowerBorder(String value) {
-        lowerBound = Integer.parseInt(value);
+        byteCodeInNumberFormat.add(ByteCodeCommands.loop.getNumberFormat());
+        byteCodeInNumberFormat.add(ByteCodeCommands.fvar.getNumberFormat());
+        byteCodeInNumberFormat.add(String.valueOf(varMap.get(varName).getIndex()));
     }
 
 
@@ -159,7 +214,7 @@ public class SuperClass {
         varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
         funcList.get(funcList.size() - 1).incNumOfParams();
 
-        byteCode.add(Type.strValue(type).toString());
+        byteCode.add(Type.strValue(type).getLabel());
 
         byteCodeInNumberFormat.add(Type.strValue(type).getNumberFormat());
     }
@@ -207,7 +262,7 @@ public class SuperClass {
 
 
     public static void literal(String literal, Type type, int line) {
-        byteCode.add(type.toString());
+        byteCode.add(type.getLabel());
         byteCode.add(literal);
 
         byteCodeInNumberFormat.add(type.getNumberFormat());
