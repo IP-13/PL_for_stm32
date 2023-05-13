@@ -49,8 +49,11 @@ public class SuperClass {
 
     // antlr rules
 
-    public static void program() {
 
+    public static void program() {
+        byteCode.add(ByteCodeCommands.exit.toString());
+
+        byteCodeInNumberFormat.add(ByteCodeCommands.exit.getNumberFormat());
     }
 
 
@@ -76,7 +79,7 @@ public class SuperClass {
 
     public static void fromCycle() {
         int counterAddr = fromCycleStack.pop();
-        int currAddr = byteCode.size() - 1;
+        int currAddr = byteCode.size(); // addr of first command after last fromCycle command
 
         byteCode.add(ByteCodeCommands.jdec.toString());
         byteCode.add(String.valueOf(counterAddr - (currAddr + 1))); // after adding jdec command curr addr increased by 1
@@ -152,14 +155,25 @@ public class SuperClass {
 
 
     public static void ifOperator() {
+        int jtAddr = ifOperatorStack.pop();
+        int currAddr = byteCode.size();
 
+        String addrToJt = String.valueOf(currAddr - jtAddr);
+
+        byteCode.set(jtAddr, addrToJt);
+
+        byteCodeInNumberFormat.set(jtAddr, addrToJt);
     }
 
 
     public static void boolExpr() {
         byteCode.add(ByteCodeCommands.jt.toString());
+        byteCode.add("stub for address to jump if condition is false");
 
         byteCodeInNumberFormat.add(ByteCodeCommands.jt.getNumberFormat());
+        byteCodeInNumberFormat.add("stub for address to jump if condition is false");
+
+        ifOperatorStack.add(byteCode.size() - 1);
     }
 
 

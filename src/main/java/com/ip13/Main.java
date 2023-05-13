@@ -17,12 +17,20 @@ public class Main {
                 START
                 FROM 1 TO 5 WITH 2:
                 START
-                AA : float;
-                BB : int;
-                CC : string;
+               
+                B : int;
+                C : string;
+                
+                IF and(FALSE, TRUE):
+                START
+                sum(B, C);
+                FINISH
+                
                 FINISH
                 RETURN A;
-                FINISH                  
+                FINISH  
+                
+                                
                 MAIN
                 A : float;
                 print(A);
