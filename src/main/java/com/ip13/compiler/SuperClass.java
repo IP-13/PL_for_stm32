@@ -191,8 +191,9 @@ public class SuperClass {
 
 
     public static void funcArgLiteral() {
-        byteCode.add(byteCode.size() - 1, ByteCodeCommands.lit.toString());
-        byteCodeInNumberFormat.add(byteCode.size() - 1, ByteCodeCommands.lit.getNumberFormat());
+        byteCode.add(byteCode.size() - 2, ByteCodeCommands.lit.toString());
+
+        byteCodeInNumberFormat.add(byteCode.size() - 2, ByteCodeCommands.lit.getNumberFormat());
     }
 
 
@@ -209,26 +210,8 @@ public class SuperClass {
         byteCode.add(type.toString());
         byteCode.add(literal);
 
-
         byteCodeInNumberFormat.add(type.getNumberFormat());
         byteCodeInNumberFormat.add(literal);
-//        switch (type) {
-//            case BOOL -> {
-//
-//            }
-//            case INT -> {
-//
-//            }
-//            case FLOAT -> {
-//
-//            }
-//            case STRING -> {
-//
-//            }
-//            default -> {
-//                System.out.println("Error with literal at line: " + line);
-//            }
-//        }
     }
 
 }

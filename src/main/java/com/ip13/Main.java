@@ -22,6 +22,12 @@ public class Main {
                                         
                 my_func2() : int
                 START
+                I: int;
+                
+                FROM 5 TO 10 WITH 3:
+                START
+                my_func(I);
+                FINISH
                 RETURN "saklfj;asjflk;fsakfsiweorupiso;fj";
                 FINISH
                                         
