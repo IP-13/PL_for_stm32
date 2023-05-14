@@ -1,5 +1,7 @@
 package com.ip13.compiler;
 
+import com.ip13.Exceptions.NoSuchFuncException;
+
 import java.util.*;
 
 public class SuperClass {
@@ -10,7 +12,7 @@ public class SuperClass {
     private static Stack<Integer> fromCycleStack = new Stack<>();
     private static Stack<Integer> ifOperatorStack = new Stack<>();
 
-    
+
     public static void showVarMap() {
         varMap.forEach((name, varInfo) -> System.out.println("Name : " + name + " Type : " + varInfo.getType() + " Index: " + varInfo.getIndex()));
     }
@@ -32,11 +34,6 @@ public class SuperClass {
     public static void showByteCode() {
         byteCode.forEach(System.out::println);
     }
-
-
-//    public static void changeStringLitToNumberFormat() {
-//        byteCodeInNumberFormat.stream().filter().forEach();
-//    }
 
 
     // antlr rules
@@ -171,9 +168,21 @@ public class SuperClass {
     }
 
 
-    public static void funcCall(String funcName) {
-        byteCode.add(ByteCodeCommands.call.toString());
-        byteCode.add(String.valueOf(funcList.stream().findFirst().orElse(null).getStart()));
+    public static void funcCall(String funcName, int line) {
+        String itmovaFunc = ByteCodeCommands.getItmovaCore(funcName);
+
+        if (itmovaFunc != null) {
+            byteCode.add(itmovaFunc);
+        } else {
+            int userDefinedFuncStart = funcList.
+                    stream().
+                    findFirst().
+                    orElse(null).
+//                    orElseThrow(() -> new NoSuchFuncException("Call of unknown func " + funcName + " at line " + line)).
+                    getStart();
+            byteCode.add(ByteCodeCommands.call.toString());
+            byteCode.add(String.valueOf(userDefinedFuncStart));
+        }
     }
 
 
@@ -200,6 +209,7 @@ public class SuperClass {
 
 
     public static void literal(String literal, Type type, int line) {
+
         byteCode.add(type.getLabel());
         byteCode.add(literal);
     }

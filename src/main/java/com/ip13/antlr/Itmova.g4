@@ -98,7 +98,7 @@ func_param :
     ;
 
 func_call :
-    FUNC_NAME OPEN_BRACE func_args CLOSE_BRACE {SuperClass.funcCall($FUNC_NAME.text);}
+    FUNC_NAME OPEN_BRACE func_args CLOSE_BRACE {SuperClass.funcCall($FUNC_NAME.text, $FUNC_NAME.line);}
     ;
 
 func_args :

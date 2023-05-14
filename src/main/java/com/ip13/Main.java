@@ -3,6 +3,7 @@ package com.ip13;
 import com.ip13.antlr.ItmovaBaseListener;
 import com.ip13.antlr.ItmovaLexer;
 import com.ip13.antlr.ItmovaParser;
+import com.ip13.compiler.ByteCodeCommands;
 import com.ip13.compiler.SuperClass;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -30,11 +31,17 @@ public class Main {
                 RETURN A;
                 FINISH  
                 
+                
+                my_func2(A : int) : void 
+                START
+                qwerty(A, 4);
+                FINISH
+               
+                
                                 
                 MAIN
-                A : float;
-                print(A);
-                sum(A, 10);
+                A : int;
+                my_func2(A);
                 """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
@@ -45,6 +52,8 @@ public class Main {
         walker.walk(new ItmovaBaseListener(), tree);
 
         SuperClass.showByteCode();
+
+
     }
 }
 
