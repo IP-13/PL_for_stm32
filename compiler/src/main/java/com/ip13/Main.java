@@ -3,7 +3,6 @@ package com.ip13;
 import com.ip13.antlr.ItmovaBaseListener;
 import com.ip13.antlr.ItmovaLexer;
 import com.ip13.antlr.ItmovaParser;
-import com.ip13.compiler.ByteCodeCommands;
 import com.ip13.compiler.SuperClass;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -34,7 +33,7 @@ public class Main {
                 
                 my_func2(A : int) : void 
                 START
-                qwerty(A, 4);
+                sum(A, 4);
                 FINISH
                
                 
@@ -51,9 +50,9 @@ public class Main {
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(new ItmovaBaseListener(), tree);
 
+        SuperClass.showFuncList();
+        System.out.println("__________________________________");
         SuperClass.showByteCode();
-
-
     }
 }
 

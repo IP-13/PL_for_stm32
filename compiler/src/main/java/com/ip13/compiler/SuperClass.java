@@ -1,8 +1,10 @@
 package com.ip13.compiler;
 
-import com.ip13.Exceptions.NoSuchFuncException;
+import com.ip13.Exceptions.UnknownFuncCallException;
 
 import java.util.*;
+
+import static java.util.Objects.isNull;
 
 public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
@@ -171,17 +173,20 @@ public class SuperClass {
     public static void funcCall(String funcName, int line) {
         String itmovaFunc = ByteCodeCommands.getItmovaCore(funcName);
 
-        if (itmovaFunc != null) {
+        if (!isNull(itmovaFunc)) {
             byteCode.add(itmovaFunc);
         } else {
-            int userDefinedFuncStart = funcList.
-                    stream().
-                    findFirst().
-                    orElse(null).
-//                    orElseThrow(() -> new NoSuchFuncException("Call of unknown func " + funcName + " at line " + line)).
-                    getStart();
-            byteCode.add(ByteCodeCommands.call.toString());
-            byteCode.add(String.valueOf(userDefinedFuncStart));
+            try {
+                int userDefinedFuncStart = funcList.stream().
+                        filter(funcInfo -> funcInfo.getName().equals(funcName)).
+                        findFirst().
+                        orElseThrow(() -> new UnknownFuncCallException("Call of unknown func " + funcName + " at line " + line)).
+                        getStart();
+                byteCode.add(ByteCodeCommands.call.toString());
+                byteCode.add(String.valueOf(userDefinedFuncStart));
+            } catch (NullPointerException ex) {
+                throw new UnknownFuncCallException("Call of unknown func " + funcName + " at line " + line);
+            }
         }
     }
 
@@ -209,7 +214,6 @@ public class SuperClass {
 
 
     public static void literal(String literal, Type type, int line) {
-
         byteCode.add(type.getLabel());
         byteCode.add(literal);
     }
