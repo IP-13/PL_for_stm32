@@ -26,6 +26,8 @@ public class Main {
         walker.walk(new ItmovaBaseListener(), tree);
 
         SuperClass.showByteCode();
+        System.out.println("______________________________________");
+        SuperClass.showByteCodeInNumberFormat();
     }
 }
 

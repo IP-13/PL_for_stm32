@@ -50,6 +50,26 @@ public class SuperClass {
     }
 
 
+    public static List<Integer> translateByteCodeToNumberFormat() {
+        List<Integer> byteCodeInNumberFormat = new ArrayList<>();
+        byteCode.forEach(command -> {
+            int numberFormat = ByteCodeCommands.getCommandInNumberFormat(command);
+
+            if (numberFormat != -1) {
+                byteCodeInNumberFormat.add(numberFormat);
+            } else {
+                try {
+                    byteCodeInNumberFormat.add(Integer.parseInt(command));
+                } catch (NumberFormatException ex) {
+                    command.chars().forEach(byteCodeInNumberFormat::add);
+                }
+            }
+        });
+
+        return byteCodeInNumberFormat;
+    }
+
+
     public static int getEntryPoint() {
         return entryPoint;
     }
@@ -58,6 +78,14 @@ public class SuperClass {
     public static void showByteCode() {
         for (int i = 0; i < byteCode.size(); i++) {
             System.out.println(i + ":\t" + byteCode.get(i));
+        }
+    }
+
+
+    public static void showByteCodeInNumberFormat() {
+        List<Integer> byteCodeInNumberFormat = translateByteCodeToNumberFormat();
+        for (int i = 0; i < byteCodeInNumberFormat.size(); i++) {
+            System.out.println(i + ":\t" + byteCodeInNumberFormat.get(i));
         }
     }
 
@@ -82,7 +110,7 @@ public class SuperClass {
     public static void entryPoint(int line) {
         varMap = new HashMap<>(); // new scope of global vars starts with program entry point
         entryPoint = byteCode.size();
-        byteCode.add("MAIN start at " + entryPoint);
+        byteCode.add("MAIN");
     }
 
 
