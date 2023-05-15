@@ -2,7 +2,7 @@ grammar Itmova;
 
 @header {
     import com.ip13.compiler.SuperClass;
-    import com.ip13.compiler.Type;
+    import com.ip13.compiler.ByteCodeCommands;
 }
 
 program :
@@ -68,7 +68,7 @@ bool_expr :
     ;
 
 func_def :
-    FUNC_NAME OPEN_BRACE func_params CLOSE_BRACE COLON return_type START statements FINISH {SuperClass.funcDef($FUNC_NAME.text, $return_type.text);}
+    FUNC_NAME OPEN_BRACE func_params CLOSE_BRACE COLON return_type START statements FINISH {SuperClass.funcDef($FUNC_NAME.text, $return_type.text, $FUNC_NAME.line);}
     ;
 
 return_type :
@@ -94,7 +94,7 @@ func_params :
     ;
 
 func_param :
-    VAR_NAME COLON TYPE {SuperClass.funcParam($VAR_NAME.text, $TYPE.text);}
+    VAR_NAME COLON TYPE {SuperClass.funcParam($VAR_NAME.text, $TYPE.text, $VAR_NAME.line);}
     ;
 
 func_call :
@@ -118,17 +118,17 @@ func_arg :
     ;
 
 var_def :
-   VAR_NAME COLON TYPE SEMICOLON {SuperClass.varDef($VAR_NAME.text, $TYPE.text);}
+   VAR_NAME COLON TYPE SEMICOLON {SuperClass.varDef($VAR_NAME.text, $TYPE.text, $VAR_NAME.line);}
    ;
 
 literal :
-    BOOL {SuperClass.literal($BOOL.text, Type.BOOL, $BOOL.line);}
+    BOOL {SuperClass.literal($BOOL.text, ByteCodeCommands.BOOL, $BOOL.line);}
     |
-    INT {SuperClass.literal($INT.text, Type.INT, $INT.line);}
+    INT {SuperClass.literal($INT.text, ByteCodeCommands.INT, $INT.line);}
     |
-    FLOAT {SuperClass.literal($FLOAT.text, Type.FLOAT, $FLOAT.line);}
+    FLOAT {SuperClass.literal($FLOAT.text, ByteCodeCommands.FLT, $FLOAT.line);}
     |
-    STRING {SuperClass.literal($STRING.text, Type.STRING, $STRING.line);}
+    STRING {SuperClass.literal($STRING.text, ByteCodeCommands.STR, $STRING.line);}
     ;
 
 

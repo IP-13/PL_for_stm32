@@ -3,11 +3,11 @@ package com.ip13.compiler;
 public class FuncInfo {
     private String name;
     private int start; // start addr in byte-code
-    private Type type;
+    private ByteCodeCommands type;
     private int numOfParams;
 
 
-    public FuncInfo(String name, int start, Type type, int numOfParams) {
+    public FuncInfo(String name, int start, ByteCodeCommands type, int numOfParams) {
         this.name = name;
         this.start = start;
         this.type = type;
@@ -40,12 +40,12 @@ public class FuncInfo {
     }
 
 
-    public Type getType() {
+    public ByteCodeCommands getType() {
         return type;
     }
 
 
-    public void setType(Type type) {
+    public void setType(ByteCodeCommands type) {
         this.type = type;
     }
 

@@ -12,35 +12,22 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String program = """
-                my_func(A: int) : pointer   
+        String program = """ 
+                my_func2(A : int) : pointer
                 START
-                FROM 1 TO 5 WITH 2:
-                START
-               
-                B : int;
-                C : string;
-                
-                IF and(FALSE, TRUE):
-                START
-                sum(B, C);
+                RETURN "qwerty";
                 FINISH
                 
-                FINISH
-                RETURN A;
-                FINISH  
-                
-                
-                my_func2(A : int) : void 
+                my_func3() : pointer
                 START
-                sum(A, 4);
+                B : float;
                 FINISH
-               
                 
-                                
                 MAIN
-                A : int;
-                my_func2(A);
+                my_func2(2, 3, 4);
+                
+                A : float;
+                sum(2, 2);
                 """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
@@ -50,8 +37,6 @@ public class Main {
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(new ItmovaBaseListener(), tree);
 
-        SuperClass.showFuncList();
-        System.out.println("__________________________________");
         SuperClass.showByteCode();
     }
 }

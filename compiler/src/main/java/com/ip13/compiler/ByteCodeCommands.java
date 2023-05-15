@@ -21,11 +21,11 @@ public enum ByteCodeCommands {
     rvar("121"),
     rofc("122"),
     // types
-    BLN("200"),
+    BOOL("200"),
     INT("201"),
     FLT("202"),
     STR("203"),
-    PRT("204"),
+    PTR("204"),
     VOID("205"),
     // itmova-core
     print("700"),

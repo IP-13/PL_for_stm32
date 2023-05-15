@@ -2,9 +2,9 @@ package com.ip13.compiler;
 
 public class VarInfo {
     private int index;
-    private Type type;
+    private ByteCodeCommands type;
 
-    public VarInfo(int index, Type type) {
+    public VarInfo(int index, ByteCodeCommands type) {
         this.index = index;
         this.type = type;
     }
@@ -17,11 +17,11 @@ public class VarInfo {
         this.index = index;
     }
 
-    public Type getType() {
+    public ByteCodeCommands getType() {
         return type;
     }
 
-    public void setType(Type type) {
+    public void setType(ByteCodeCommands type) {
         this.type = type;
     }
 }

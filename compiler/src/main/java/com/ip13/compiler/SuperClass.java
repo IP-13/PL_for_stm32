@@ -1,6 +1,7 @@
 package com.ip13.compiler;
 
 import com.ip13.Exceptions.UnknownFuncCallException;
+import com.ip13.Exceptions.UnknownTypeException;
 
 import java.util.*;
 
@@ -9,10 +10,10 @@ import static java.util.Objects.isNull;
 public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
     private static final List<FuncInfo> funcList = new ArrayList<>();
-    private static Map<String, VarInfo> varMap = new HashMap();
+    private static Map<String, VarInfo> varMap = new HashMap<>();
     private static int entryPoint = 0; //
-    private static Stack<Integer> fromCycleStack = new Stack<>();
-    private static Stack<Integer> ifOperatorStack = new Stack<>();
+    private static final Stack<Integer> fromCycleStack = new Stack<>();
+    private static final Stack<Integer> ifOperatorStack = new Stack<>();
 
 
     public static void showVarMap() {
@@ -28,6 +29,9 @@ public class SuperClass {
     }
 
 
+    public static void optimizeStringLiterals() {
+        int currOverHead = 0;
+    }
     public static int getEntryPoint() {
         return entryPoint;
     }
@@ -127,10 +131,10 @@ public class SuperClass {
     }
 
 
-    public static void funcDef(String name, String type) {
+    public static void funcDef(String name, String type, int line) {
         FuncInfo lastFunc = funcList.get(funcList.size() - 1);
         lastFunc.setName(name);
-        lastFunc.setType(Type.strValue(type));
+        lastFunc.setType(defineType(type, "Unknown return type in func " + name + " definition at line " + line));
         byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
         byteCode.add(lastFunc.getStart(), type);
     }
@@ -158,15 +162,17 @@ public class SuperClass {
     }
 
 
-    public static void funcParam(String name, String type) {
+    public static void funcParam(String name, String type, int line) {
         if (funcList.size() == 0 || funcList.get(funcList.size() - 1).getName() != null) { // second condition means that previous function reached top rule: func def
             varMap = new HashMap<>(); // new scope starts with new func def
             funcList.add(new FuncInfo(null, byteCode.size(), null, 0));
         }
 
-        varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
+        ByteCodeCommands byteCodeType = defineType(type, "Unknown type " + type + " of func param " + name + " at line " + line);
+
+        varMap.put(name, new VarInfo(varMap.size(), byteCodeType));
         funcList.get(funcList.size() - 1).incNumOfParams();
-        byteCode.add(Type.strValue(type).getLabel());
+        byteCode.add(byteCodeType.toString());
     }
 
 
@@ -207,15 +213,40 @@ public class SuperClass {
     }
 
 
-    public static void varDef(String name, String type) {
-        varMap.put(name, new VarInfo(varMap.size(), Type.strValue(type)));
+    public static void varDef(String name, String type, int line) {
+        ByteCodeCommands byteCodeType = defineType(type, "Definition of variable " + name + " with unknown type " + type + " at line " + line);
+        varMap.put(name, new VarInfo(varMap.size(), byteCodeType));
         byteCode.add(type);
     }
 
 
-    public static void literal(String literal, Type type, int line) {
-        byteCode.add(type.getLabel());
+    public static void literal(String literal, ByteCodeCommands type, int line) {
+        byteCode.add(type.toString());
         byteCode.add(literal);
     }
 
+
+    private static ByteCodeCommands defineType(String type, String message) {
+        switch (type) {
+            case "bool" -> {
+                return ByteCodeCommands.BOOL;
+            }
+            case "int" -> {
+                return ByteCodeCommands.INT;
+            }
+            case "float" -> {
+                return ByteCodeCommands.FLT;
+            }
+            case "string" -> {
+                return ByteCodeCommands.STR;
+            }
+            case "pointer" -> {
+                return ByteCodeCommands.PTR;
+            }
+            case "void" -> {
+                return ByteCodeCommands.VOID;
+            }
+            default -> throw new UnknownTypeException(message);
+        }
+    }
 }
