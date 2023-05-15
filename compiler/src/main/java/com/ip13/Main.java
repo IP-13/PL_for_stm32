@@ -13,21 +13,9 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """ 
-                my_func2(A : int) : pointer
-                START
-                RETURN "qwerty";
-                FINISH
-                
-                my_func3() : pointer
-                START
-                B : float;
-                FINISH
-                
                 MAIN
-                my_func2(2, 3, 4);
-                
-                A : float;
-                sum(2, 2);
+                A:float;
+                print("literal", "one more literal", "literal again", "guess what? Right. Literal", "123");
                 """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));

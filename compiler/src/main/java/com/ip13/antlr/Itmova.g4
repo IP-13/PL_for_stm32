@@ -6,7 +6,7 @@ grammar Itmova;
 }
 
 program :
-    statements
+    statements {SuperClass.program();}
     ;
 
 statements :
@@ -157,7 +157,7 @@ DOUBLE_QUOTE : '"';
 BOOL : 'TRUE' | 'FALSE';
 INT : (('-')? [0-9]+);
 FLOAT : (('-')? [0-9]+) | (('-')?[0-9]+ ('.' | ',') [0-9]+);
-STRING : '"'(.)*'"';
+STRING : '"'(.)*?'"';
 VOID : 'void';
 
 FUNC_NAME : [a-z] ([a-z0-9] | '_' )*;

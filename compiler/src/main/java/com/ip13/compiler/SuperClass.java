@@ -11,6 +11,7 @@ public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
     private static final List<FuncInfo> funcList = new ArrayList<>();
     private static Map<String, VarInfo> varMap = new HashMap<>();
+    private static final List<String> stringLiteralsStorage = new ArrayList<>(); // addr in bytecode, value
     private static int entryPoint = 0; //
     private static final Stack<Integer> fromCycleStack = new Stack<>();
     private static final Stack<Integer> ifOperatorStack = new Stack<>();
@@ -30,23 +31,41 @@ public class SuperClass {
 
 
     public static void optimizeStringLiterals() {
-        int currOverHead = 0;
+        int byteCodeSize = byteCode.size();
+
+        for (int i = 0; i < byteCodeSize; i++) {
+            if (byteCode.get(i).equals(ByteCodeCommands.lit.toString()) ||
+                    byteCode.get(i).equals(ByteCodeCommands.rlit.toString())) {                     // check for literal
+                if (byteCode.get(i + 1).equals(ByteCodeCommands.STR.toString())) {                  // check if it's a string literal
+                    String s = stringLiteralsStorage.get(Integer.parseInt(byteCode.get(i + 2))); // gets string literal
+                    int len = s.length() - 2;                                                       // subtract 2 because string has quotes at both sides
+                    byteCode.set(i + 2, String.valueOf(byteCode.size()));                         // sets addr of string start at the end of bytecode
+                    byteCode.add(String.valueOf(len));                                            // adds string literal size
+                    for (int j = 0; j < len; j++) {                                                 // adds string chars
+                        byteCode.add(String.valueOf(s.charAt(j + 1)));
+                    }
+                }
+            }
+        }
     }
+
+
     public static int getEntryPoint() {
         return entryPoint;
     }
 
 
     public static void showByteCode() {
-        byteCode.forEach(System.out::println);
+        for (int i = 0; i < byteCode.size(); i++) {
+            System.out.println(i + ":\t" + byteCode.get(i));
+        }
     }
 
 
     // antlr rules
-
-
     public static void program() {
         byteCode.add(ByteCodeCommands.exit.toString());
+        optimizeStringLiterals();
     }
 
 
@@ -132,11 +151,13 @@ public class SuperClass {
 
 
     public static void funcDef(String name, String type, int line) {
+        ByteCodeCommands byteCodeType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
         FuncInfo lastFunc = funcList.get(funcList.size() - 1);
         lastFunc.setName(name);
-        lastFunc.setType(defineType(type, "Unknown return type in func " + name + " definition at line " + line));
+        lastFunc.setType(byteCodeType);
         byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
-        byteCode.add(lastFunc.getStart(), type);
+        byteCode.add(lastFunc.getStart(), byteCodeType.toString());
+        byteCode.add(ByteCodeCommands.jret.toString());
     }
 
 
@@ -216,13 +237,18 @@ public class SuperClass {
     public static void varDef(String name, String type, int line) {
         ByteCodeCommands byteCodeType = defineType(type, "Definition of variable " + name + " with unknown type " + type + " at line " + line);
         varMap.put(name, new VarInfo(varMap.size(), byteCodeType));
-        byteCode.add(type);
+        byteCode.add(byteCodeType.toString());
     }
 
 
     public static void literal(String literal, ByteCodeCommands type, int line) {
         byteCode.add(type.toString());
-        byteCode.add(literal);
+        if (type.equals(ByteCodeCommands.STR)) {
+            byteCode.add(String.valueOf(stringLiteralsStorage.size()));
+            stringLiteralsStorage.add(literal);
+        } else {
+            byteCode.add(literal);
+        }
     }
 
 

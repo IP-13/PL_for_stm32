@@ -3,15 +3,15 @@ package com.ip13.compiler;
 public enum ByteCodeCommands {
     // program flow
     exit("0"),
-    jmp("1"),
-    jdec("2"),
+    jmp("1"), // absolute jump
+    jdec("2"), // relative jump
     jret("3"),
     // from loop
     loop("10"),
     fint("11"),
     fvar("12"),
     // if operator
-    jt("20"),
+    jt("20"), // relative jump
     // func-related
     call("100"),
     lit("110"),
@@ -60,6 +60,9 @@ public enum ByteCodeCommands {
     mod("761"),
     min("762"),
     max("763"),
+    less("764"),
+    greater("765"),
+    equal("766"),
     // math non-arg
     PI("775"),
     E("776"),
