@@ -15,9 +15,10 @@ public class Main {
         String program = """ 
                 my_func(S1 : string, S2 : string) : int
                 START
-                SIZE : int;
-                assign(SIZE, sum(length(S1), length(S2)));
-                RETURN SIZE;
+                FROM 1 TO 10 WITH 1:
+                START
+                print(10);
+                FINISH
                 FINISH
                 MAIN
                 print(my_func("qwerty", "123"));

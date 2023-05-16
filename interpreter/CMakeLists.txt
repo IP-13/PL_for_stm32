@@ -7,5 +7,4 @@ include_directories(include)
 
 add_executable(ITMOVA
         main.c
-        src/itmova_core.c
         src/interpreter.c)

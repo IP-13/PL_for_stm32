@@ -16,7 +16,7 @@ public enum ByteCodeCommands {
     call(100),
     lit(110),
     var(111),
-    ofc(112), // other function call, TODO come up with a better name
+    ofc(112),
     rlit(120),
     rvar(121),
     rofc(122),
