@@ -5,11 +5,12 @@
 
 #define DEFAULT// define your structs sizes (in bytes). They depend on memory size
 
+
 #ifdef DEFAULT
-#define DATA_STACK_SIZE 1024
-#define RET_STACK_SIZE 1024
-#define VAR_MAP_SIZE 1024
-#define HEAP_SIZE 1024
+#define DATA_STACK_SIZE 1024 // max size - 65536
+#define RET_STACK_SIZE 1024 // max size - 65536
+#define VAR_MAP_SIZE 1024 // max size - 65536
+#define HEAP_SIZE 1024 // max size - 4294967296
 #define NULL_PTR HEAP_SIZE
 #endif
 
@@ -38,7 +39,7 @@ enum byte_code_commands {
     PTR = 204,
     VOID = 205,
     PRINT = 700,
-    AGGING = 701,
+    ASSIGN = 701,
     GET_DATA = 710,
     SET_DATA = 711,
     GET_ADDR = 712,
@@ -74,15 +75,15 @@ enum byte_code_commands {
 };
 
 
-// data_stack
 struct var {
     enum byte_code_commands type;
     void *value;
 };
 
 
+// data_stack
 struct data_stack {
-    int32_t size;
+    uint16_t size;
     struct var *data;
 };
 
@@ -93,54 +94,64 @@ struct var data_stack_top(struct data_stack *stack);
 struct var data_stack_pop(struct data_stack *stack);
 
 
-void data_stack_push(struct data_stack *stack, int32_t top);
+void data_stack_push(struct data_stack *stack, enum byte_code_commands type, void *value);
 
 
 // ret_stack
 struct ret_stack {
-    int32_t size;
-    int32_t *data;
+    uint16_t size; // in bytes
+    uint32_t *data;
 };
 
 
-int32_t ret_stack_top(struct ret_stack *stack);
+uint32_t ret_stack_top(struct ret_stack *stack);
 
 
-int32_t ret_stack_pop(struct ret_stack *stack);
+uint32_t ret_stack_pop(struct ret_stack *stack);
 
 
-void ret_stack_push(struct ret_stack *stack, int32_t top);
+void ret_stack_push(struct ret_stack *stack, uint32_t top);
 
 
 // var map
 struct var_map {
-    int32_t size;
+    uint16_t size; // in bytes
     struct var *data;
 };
 
 
 struct var_map_map {
-    int8_t size;
+    uint8_t num_of_var_maps;
     struct var_map *data;
 };
 
 
+struct var var_map_get_var(uint32_t var_index, uint32_t map_index, struct var_map_map var_map_map);
+
+
+struct var var_map_set_var(enum byte_code_commands, void *value, uint32_t var_index, uint32_t map_index,
+                           struct var_map_map var_map_map);
+
+
+struct var var_map_add_var(enum byte_code_commands, void *value, struct var_map_map var_map_map);
+
+
 // heap
 struct heap_entry {
+    uint8_t num_of_links;
     enum byte_code_commands type;
     void *value; // null by default
-    int8_t num_of_links;
 };
 
 
 struct heap {
-    int32_t size; // in bytes
+    uint32_t size; // in bytes
     struct heap_entry *data; // index - addr, value - heap_entry
-    int32_t next_free_entry; // index of the next free addr in the data.
+    uint32_t next_free_entry; // index of the next free addr in the data.
 };
 
 
-struct heap_entry get_by_addr(int32_t addr, struct heap *heap);
+struct heap_entry heap_get_by_addr(uint32_t addr, struct heap *heap);
 
 
 int32_t heap_insert(void *value, struct heap *heap); // return addr at which value was inserted
@@ -154,3 +165,5 @@ struct interpreter {
     struct heap *heap;
 };
 
+
+void interpret(struct interpreter interpreter, int32_t *byte_code, int32_t start);

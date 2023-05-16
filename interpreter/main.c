@@ -37,7 +37,7 @@ int main() {
 
     struct data_stack data_stack = {.size = 0, .data = data_stack_data};
     struct ret_stack ret_stack = {.size = 0, .data = ret_stack_data};
-    struct var_map_map var_map_map = {.size = 0, .data = var_map_map_data};
+    struct var_map_map var_map_map = {.num_of_var_maps = 1, .data = var_map_map_data};
     struct heap heap = {.size = 0, .data = heap_data};
     struct interpreter interpreter = {
             .data_stack = &data_stack,
