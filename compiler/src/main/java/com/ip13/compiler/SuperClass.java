@@ -75,17 +75,26 @@ public class SuperClass {
     }
 
 
-    public static void showByteCode() {
-        for (int i = 0; i < byteCode.size(); i++) {
-            System.out.println(i + ":\t" + byteCode.get(i));
+    public static void showByteCode(boolean showCommandsNumber) {
+        if (showCommandsNumber) {
+            for (int i = 0; i < byteCode.size(); i++) {
+                System.out.println(i + ":\t" + byteCode.get(i));
+            }
+        } else {
+            byteCode.forEach(System.out::println);
         }
     }
 
 
-    public static void showByteCodeInNumberFormat() {
+    public static void showByteCodeInNumberFormat(boolean showCommandsNumber) {
         List<Integer> byteCodeInNumberFormat = translateByteCodeToNumberFormat();
-        for (int i = 0; i < byteCodeInNumberFormat.size(); i++) {
-            System.out.println(i + ":\t" + byteCodeInNumberFormat.get(i));
+
+        if (showCommandsNumber) {
+            for (int i = 0; i < byteCodeInNumberFormat.size(); i++) {
+                System.out.println(i + ":\t" + byteCodeInNumberFormat.get(i));
+            }
+        } else {
+            byteCodeInNumberFormat.forEach(System.out::println);
         }
     }
 

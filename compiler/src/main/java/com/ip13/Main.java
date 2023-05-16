@@ -13,9 +13,14 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """ 
+                my_func(S1 : string, S2 : string) : int
+                START
+                SIZE : int;
+                assign(SIZE, sum(length(S1), length(S2)));
+                RETURN SIZE;
+                FINISH
                 MAIN
-                A:float;
-                print("literal", "one more literal", "literal again", "guess what? Right. Literal", "123");
+                print(my_func("qwerty", "123"));
                 """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
@@ -25,9 +30,9 @@ public class Main {
         ParseTreeWalker walker = new ParseTreeWalker();
         walker.walk(new ItmovaBaseListener(), tree);
 
-        SuperClass.showByteCode();
+        SuperClass.showByteCode(true);
         System.out.println("______________________________________");
-        SuperClass.showByteCodeInNumberFormat();
+        SuperClass.showByteCodeInNumberFormat(false);
     }
 }
 
