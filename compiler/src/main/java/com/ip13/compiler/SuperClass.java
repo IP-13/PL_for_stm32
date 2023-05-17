@@ -53,15 +53,20 @@ public class SuperClass {
     public static List<Integer> translateByteCodeToNumberFormat() {
         List<Integer> byteCodeInNumberFormat = new ArrayList<>();
         byteCode.forEach(command -> {
-            int numberFormat = ByteCodeCommands.getCommandInNumberFormat(command);
-
-            if (numberFormat != -1) {
-                byteCodeInNumberFormat.add(numberFormat);
+            if (command.equals("counter")) {
+                byteCodeInNumberFormat.add(0);
             } else {
-                try {
-                    byteCodeInNumberFormat.add(Integer.parseInt(command));
-                } catch (NumberFormatException ex) {
-                    command.chars().forEach(byteCodeInNumberFormat::add);
+
+                int numberFormat = ByteCodeCommands.getCommandInNumberFormat(command);
+
+                if (numberFormat != -1) {
+                    byteCodeInNumberFormat.add(numberFormat);
+                } else {
+                    try {
+                        byteCodeInNumberFormat.add(Integer.parseInt(command));
+                    } catch (NumberFormatException ex) {
+                        command.chars().forEach(byteCodeInNumberFormat::add);
+                    }
                 }
             }
         });
