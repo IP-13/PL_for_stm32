@@ -5,21 +5,19 @@ int main() {
     struct var data_stack_data[DATA_STACK_SIZE];
 
     for (size_t i = 0; i < DATA_STACK_SIZE; i++) {
-        struct var data_stack_entry = {.value = NULL};
-        data_stack_data[i] = data_stack_entry;
+        data_stack_data[i] = NULL_DATA_STACK_ENTRY;
     }
 
-    int32_t ret_stack_data[RET_STACK_SIZE];
+    uint32_t ret_stack_data[RET_STACK_SIZE];
 
     for (size_t i = 0; i < RET_STACK_SIZE; i++) {
-        ret_stack_data[i] = 0;
+        ret_stack_data[i] = NULL_RET_STACK_ENTRY;
     }
 
     struct var var_map_data[VAR_MAP_SIZE];
 
     for (size_t i = 0; i < VAR_MAP_SIZE; i++) {
-        struct var var = {.value = NULL};
-        var_map_data[i] = var;
+        var_map_data[i] = NULL_VAR_MAP_ENTRY;
     }
 
     struct var_map var_map_map_data[RET_STACK_SIZE];
@@ -31,14 +29,14 @@ int main() {
     struct heap_entry heap_data[HEAP_SIZE];
 
     for (size_t i = 0; i < HEAP_SIZE; i++) {
-        struct heap_entry heap_entry = {.value = NULL, .num_of_links = 0};
-        heap_data[i] = heap_entry;
+        heap_data[i] = NULL_HEAP_ENTRY;
     }
 
-    struct data_stack data_stack = {.size = 0, .data = data_stack_data};
-    struct ret_stack ret_stack = {.size = 0, .data = ret_stack_data};
-    struct var_map_map var_map_map = {.num_of_var_maps = 1, .data = var_map_map_data};
-    struct heap heap = {.size = 0, .data = heap_data};
+
+    struct data_stack data_stack = {.num_of_entries = 0, .data = data_stack_data};
+    struct ret_stack ret_stack = {.num_of_entries = 0, .data = ret_stack_data};
+    struct var_map_map var_map_map = {.num_of_entries = 1, .data = var_map_map_data};
+    struct heap heap = {.num_of_entries = 0, .data = heap_data};
     struct interpreter interpreter = {
             .data_stack = &data_stack,
             .ret_stack = &ret_stack,
@@ -46,7 +44,8 @@ int main() {
             .heap = &heap
     };
 
-    int32_t program_start = 21;
+
+    uint32_t main_program_start = 21;
 
     int32_t byte_code[] = {201,
                            2,
@@ -93,6 +92,7 @@ int main() {
                            2,
                            3};
 
+    interpret(interpreter, byte_code, main_program_start);
 
     return 0;
 }
