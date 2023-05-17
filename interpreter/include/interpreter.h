@@ -168,5 +168,5 @@ struct interpreter {
 };
 
 
-void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t start);
+void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start);
 

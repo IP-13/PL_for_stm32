@@ -157,10 +157,25 @@ void heap_dec_num_of_links(uint32_t addr, struct heap *heap) {
 }
 
 
-void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t start) {
+static int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_code, struct interpreter *interpreter) {
+    int32_t value;
+
+    if (byte_code[++(*curr_command_addr)] == FINT) {
+        value = byte_code[++(*curr_command_addr)];
+    } else {
+        uint32_t var_index = byte_code[++(*curr_command_addr)];
+        uint32_t map_index = interpreter->var_map_map->num_of_entries - 1;
+        value = *((int32_t *) var_map_get(var_index, map_index, interpreter->var_map_map).value);
+    }
+
+    return value;
+}
+
+
+void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start) {
     uint32_t curr_command_addr = start;
-    int32_t curr_command = byte_code[curr_command_addr];
-    while (curr_command != EXIT) {
+
+    while (byte_code[curr_command_addr] != EXIT) {
         switch (byte_code[curr_command_addr]) {
             case EXIT: {
                 // exit(0);
@@ -171,8 +186,9 @@ void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t star
                 break;
             }
             case JDEC: {
+                curr_command_addr++; // now curr_command_addr points to offset relative to current addr
                 uint32_t temp = curr_command_addr;
-                curr_command_addr += byte_code[curr_command_addr + 1];
+                curr_command_addr += byte_code[curr_command_addr];
                 uint32_t counter = --byte_code[curr_command_addr];
                 if (!counter) {
                     curr_command_addr = temp;
@@ -180,11 +196,16 @@ void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t star
                 break;
             }
             case JRET: {
-                curr_command_addr = ret_stack_pop(interpreter.ret_stack);
-                continue;
+                curr_command_addr = ret_stack_pop(interpreter->ret_stack);
+                break;
             }
             case LOOP: {
-
+                int32_t lower_bound = get_fint_fvar(&curr_command_addr, byte_code, interpreter);
+                int32_t upper_bound = get_fint_fvar(&curr_command_addr, byte_code, interpreter);
+                int32_t step = get_fint_fvar(&curr_command_addr, byte_code, interpreter);
+                int32_t counter = (upper_bound - lower_bound) / step;
+                byte_code[++curr_command_addr] = counter;
+                break;
             }
             case FINT: {
 
@@ -234,6 +255,10 @@ void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t star
             case VOID: {
 
             }
+
+
+
+
             case PRINT: {
 
             }
@@ -336,9 +361,11 @@ void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t star
             case MAIN: {
                 break;
             }
+            default: {
+
+            }
         }
 
         curr_command_addr++;
-        curr_command = byte_code[curr_command_addr];
     }
 }
