@@ -1,7 +1,6 @@
 #pragma once
 
 #include <inttypes.h>
-#include <stdlib.h>
 
 #define DEFAULT // define your structs sizes (in bytes). They depend on memory num_of_entries
 
@@ -153,7 +152,11 @@ struct heap {
 struct heap_entry heap_get_by_addr(uint32_t addr, struct heap *heap);
 
 
-uint32_t heap_insert(void *value, enum byte_code_commands type, struct heap *heap); // return addr at which value was inserted
+// return addr at which value was inserted
+uint32_t heap_insert(void *value, enum byte_code_commands type, struct heap *heap);
+
+
+void heap_dec_num_of_links(uint32_t addr, struct heap *heap);
 
 
 // interpreter
@@ -167,8 +170,3 @@ struct interpreter {
 
 void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t start);
 
-
-struct var NULL_DATA_STACK_ENTRY = {.value = NULL};
-uint32_t NULL_RET_STACK_ENTRY = 0;
-struct var NULL_VAR_MAP_ENTRY = {.value = NULL};
-struct heap_entry NULL_HEAP_ENTRY = {.value = NULL, .num_of_links = 0};

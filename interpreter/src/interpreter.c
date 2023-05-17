@@ -3,13 +3,18 @@
 #include "interpreter.h"
 
 
+static const struct var NULL_DATA_STACK_ENTRY = {.value = 0};
+static const uint32_t NULL_RET_STACK_ENTRY = 0;
+static const struct var NULL_VAR_MAP_ENTRY = {.value = 0};
+static const struct heap_entry NULL_HEAP_ENTRY = {.value = 0, .num_of_links = 0};
+
+
 struct var data_stack_top(struct data_stack *stack) {
     if (stack->num_of_entries == 0) {
         // stack underflow
     }
 
-    stack->num_of_entries--;
-    struct var top = stack->data[stack->num_of_entries];
+    struct var top = stack->data[stack->num_of_entries - 1];
     return top;
 }
 
@@ -19,8 +24,7 @@ struct var data_stack_pop(struct data_stack *stack) {
         // stack underflow
     }
 
-    stack->num_of_entries--;
-    struct var top = stack->data[stack->num_of_entries];
+    struct var top = stack->data[--stack->num_of_entries];
     stack->data[stack->num_of_entries] = NULL_DATA_STACK_ENTRY;
     return top;
 }
@@ -41,8 +45,7 @@ uint32_t ret_stack_top(struct ret_stack *stack) {
         // stack underflow
     }
 
-    stack->num_of_entries--;
-    uint32_t top = stack->data[stack->num_of_entries];
+    uint32_t top = stack->data[stack->num_of_entries - 1];
     return top;
 }
 
@@ -52,8 +55,7 @@ uint32_t ret_stack_pop(struct ret_stack *stack) {
         // stack underflow
     }
 
-    stack->num_of_entries--;
-    uint32_t top = stack->data[stack->num_of_entries];
+    uint32_t top = stack->data[--stack->num_of_entries];
     stack->data[stack->num_of_entries] = NULL_RET_STACK_ENTRY;
     return top;
 }
@@ -69,11 +71,11 @@ void ret_stack_push(struct ret_stack *stack, uint32_t top) {
 
 
 struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_map *var_map_map) {
-    if (map_index > var_map_map->num_of_entries) {
+    if (map_index >= var_map_map->num_of_entries) {
         // index out of bounds
     }
 
-    if (var_index > var_map_map->data[map_index].num_of_entries) {
+    if (var_index >= var_map_map->data[map_index].num_of_entries) {
         // index out of bounds
     }
 
@@ -83,11 +85,11 @@ struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_ma
 
 void var_map_set(enum byte_code_commands type, void *value, uint32_t var_index, uint32_t map_index,
                  struct var_map_map *var_map_map) {
-    if (map_index > var_map_map->num_of_entries) {
+    if (map_index >= var_map_map->num_of_entries) {
         // index out of bounds
     }
 
-    if (var_index > var_map_map->data[map_index].num_of_entries) {
+    if (var_index >= var_map_map->data[map_index].num_of_entries) {
         // index out of bounds
     }
 
@@ -111,11 +113,13 @@ void var_map_push(enum byte_code_commands type, void *value, struct var_map_map 
     int32_t index_to_push = var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries;
 
     var_map_map->data[var_map_map->num_of_entries - 1].data[index_to_push] = var;
+
+    var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries++;
 }
 
 
 struct heap_entry heap_get_by_addr(uint32_t addr, struct heap *heap) {
-    if (addr > heap->num_of_entries) {
+    if (addr >= heap->num_of_entries) {
         // index out of bounds
     }
 
@@ -133,6 +137,23 @@ uint32_t heap_insert(void *value, enum byte_code_commands type, struct heap *hea
     heap->data[heap->num_of_entries++] = heap_entry;
 
     return heap->num_of_entries - 1;
+}
+
+
+void heap_dec_num_of_links(uint32_t addr, struct heap *heap) {
+    if (heap->data[addr].num_of_links == 0) {
+        return; // memory is free already
+    }
+
+    heap->data[addr].num_of_links--;
+
+    if (heap->data[addr].num_of_links == 0) {
+        heap->data[addr] = NULL_HEAP_ENTRY;
+        heap->num_of_entries--;
+        if (heap->next_free_entry > addr) {
+            heap->next_free_entry = addr;
+        }
+    }
 }
 
 
@@ -159,8 +180,8 @@ void interpret(struct interpreter interpreter, int32_t *byte_code, uint32_t star
                 break;
             }
             case JRET: {
-                uint32_t ret_stack_top = ret_stack_pop(interpreter.ret_stack);
-
+                curr_command_addr = ret_stack_pop(interpreter.ret_stack);
+                continue;
             }
             case LOOP: {
 

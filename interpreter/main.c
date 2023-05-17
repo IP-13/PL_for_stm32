@@ -1,5 +1,12 @@
+#pragma once
+
+#include <stdio.h>
 #include "interpreter.h"
 
+static const struct var NULL_DATA_STACK_ENTRY = {.value = 0};
+static const uint32_t NULL_RET_STACK_ENTRY = 0;
+static const struct var NULL_VAR_MAP_ENTRY = {.value = 0};
+static const struct heap_entry NULL_HEAP_ENTRY = {.value = 0, .num_of_links = 0};
 
 int main() {
     struct var data_stack_data[DATA_STACK_SIZE];
@@ -36,7 +43,7 @@ int main() {
     struct data_stack data_stack = {.num_of_entries = 0, .data = data_stack_data};
     struct ret_stack ret_stack = {.num_of_entries = 0, .data = ret_stack_data};
     struct var_map_map var_map_map = {.num_of_entries = 1, .data = var_map_map_data};
-    struct heap heap = {.num_of_entries = 0, .data = heap_data};
+    struct heap heap = {.num_of_entries = 0, .data = heap_data, .next_free_entry = 0};
     struct interpreter interpreter = {
             .data_stack = &data_stack,
             .ret_stack = &ret_stack,
