@@ -65,6 +65,14 @@ public class SuperClass {
                     try {
                         byteCodeInNumberFormat.add(Integer.parseInt(command));
                     } catch (NumberFormatException ex) {
+                        try {
+                            float f = Float.parseFloat(command);
+                            int i = Float.floatToIntBits(f);
+                            byteCodeInNumberFormat.add(i);
+                        } catch (NumberFormatException ignored) {
+
+                        }
+
                         command.chars().forEach(byteCodeInNumberFormat::add);
                     }
                 }
