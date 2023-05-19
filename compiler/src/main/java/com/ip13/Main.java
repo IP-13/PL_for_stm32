@@ -19,9 +19,20 @@ public class Main {
                 START
                 print(10);
                 FINISH
+                RETURN "123";
+                FINISH
+                                
+                my_func2() : void
+                START
+                F :float;
                 FINISH
                 MAIN
+                IF less(2.33, 3):
+                START
+                S : string;
                 print(my_func("qwerty", "123"));
+                my_func2();
+                FINISH
                 """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
@@ -33,7 +44,8 @@ public class Main {
 
         SuperClass.showByteCode(true);
         System.out.println("______________________________________");
-        SuperClass.showByteCodeInNumberFormat(false);
+        SuperClass.showByteCodeInNumberFormat(true);
+
     }
 }
 

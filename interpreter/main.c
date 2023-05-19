@@ -20,6 +20,7 @@
 #define NULL_PTR_VALUE HEAP_SIZE
 #define NULL_STR_VALUE (-1)
 
+
 // bytecode commands
 enum byte_code_commands {
     EXIT = 0,
@@ -81,7 +82,7 @@ enum byte_code_commands {
 };
 
 
-// INTERFACE
+// structs
 struct var {
     enum byte_code_commands type;
     int32_t value;
@@ -94,28 +95,10 @@ struct data_stack {
 };
 
 
-struct var data_stack_top(struct data_stack *stack);
-
-
-struct var data_stack_pop(struct data_stack *stack);
-
-
-void data_stack_push(struct data_stack *stack, enum byte_code_commands type, int32_t value);
-
-
 struct ret_stack {
     uint16_t num_of_entries;
     uint32_t *data;
 };
-
-
-uint32_t ret_stack_top(struct ret_stack *stack);
-
-
-uint32_t ret_stack_pop(struct ret_stack *stack);
-
-
-void ret_stack_push(struct ret_stack *stack, uint32_t top);
 
 
 struct var_map {
@@ -130,20 +113,10 @@ struct var_map_map {
 };
 
 
-struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_map *var_map_map);
-
-
-void var_map_set(enum byte_code_commands type, int32_t value, uint32_t var_index, uint32_t map_index,
-                 struct var_map_map *var_map_map);
-
-
-void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_map *var_map_map);
-
-
 struct heap_entry {
     uint8_t num_of_links;
     enum byte_code_commands type;
-    void *value; // null by default
+    int32_t value; // null by default
 };
 
 
@@ -152,16 +125,6 @@ struct heap {
     struct heap_entry *data; // index - addr, value - heap_entry
     uint32_t next_free_entry; // index of the next free addr in the data.
 };
-
-
-struct heap_entry heap_get_by_addr(uint32_t addr, struct heap *heap);
-
-
-// return addr at which value was inserted
-uint32_t heap_insert(void *value, enum byte_code_commands type, struct heap *heap);
-
-
-void heap_dec_num_of_links(uint32_t addr, struct heap *heap);
 
 
 struct interpreter {
@@ -257,8 +220,8 @@ struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_ma
 }
 
 
-void var_map_set(enum byte_code_commands type, int32_t value, uint32_t var_index, uint32_t map_index,
-                 struct var_map_map *var_map_map) {
+void var_map_set(enum byte_code_commands type, int32_t value,
+                 uint32_t var_index, uint32_t map_index, struct var_map_map *var_map_map) {
     if (map_index >= var_map_map->num_of_entries) {
         // index out of bounds
     }
@@ -292,7 +255,7 @@ void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_ma
 }
 
 
-struct heap_entry heap_get_by_addr(uint32_t addr, struct heap *heap) {
+struct heap_entry heap_get(uint32_t addr, struct heap *heap) {
     if (addr >= heap->num_of_entries) {
         // index out of bounds
     }
@@ -301,14 +264,37 @@ struct heap_entry heap_get_by_addr(uint32_t addr, struct heap *heap) {
 }
 
 
-uint32_t heap_insert(void *value, enum byte_code_commands type, struct heap *heap) {
-    if (heap->num_of_entries == HEAP_SIZE) {
+void heap_set(uint32_t addr, enum byte_code_commands type, int32_t value, struct heap *heap) {
+    if (type != heap->data[addr].type) {
+        // different types
+    }
+
+    heap->data[addr].value = value;
+}
+
+
+// return addr at which value was inserted
+uint32_t heap_push(enum byte_code_commands type, int32_t value, struct heap *heap) {
+    if (heap->next_free_entry == HEAP_SIZE) {
         // stack overflow
     }
 
     struct heap_entry heap_entry = {.num_of_links = 1, .type = type, .value = value};
 
-    heap->data[heap->num_of_entries++] = heap_entry;
+    heap->data[heap->next_free_entry] = heap_entry;
+
+    heap->num_of_entries++;
+
+    if (heap->num_of_entries == HEAP_SIZE) {
+        heap->next_free_entry = HEAP_SIZE;
+    } else {
+        for (size_t i = heap->next_free_entry + 1; i < HEAP_SIZE; i++) {
+            if (heap->data[i].num_of_links == 0) {
+                heap->next_free_entry = i;
+                break;
+            }
+        }
+    }
 
     return heap->num_of_entries - 1;
 }
@@ -331,7 +317,7 @@ void heap_dec_num_of_links(uint32_t addr, struct heap *heap) {
 }
 
 
-static int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_code, struct interpreter *interpreter) {
+int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_code, struct interpreter *interpreter) {
     int32_t value;
 
     if (byte_code[++(*curr_command_addr)] == FINT) {
@@ -343,6 +329,39 @@ static int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_co
     }
 
     return value;
+}
+
+
+int32_t get_int_bits(uint32_t bits, int32_t from, int32_t to) { // from and to includes
+    return bits << (31 - from) >> (to + 31 - from);
+}
+
+
+struct var get_by_addr(int32_t addr, struct heap *heap, struct var_map_map *var_map_map) {
+    int32_t is_in_var_map = get_int_bits(addr, 31, 31);
+
+    if (!is_in_var_map) {
+        struct heap_entry heap_entry = heap_get(addr, heap);
+        return (struct var) {.type = heap_entry.type, .value = heap_entry.value};
+    } else {
+        int32_t map_index = get_int_bits(addr, 30, 16);
+        int32_t var_index = get_int_bits(addr, 15, 0);
+        return var_map_get(var_index, map_index, var_map_map);
+    }
+}
+
+
+void set_by_addr(int32_t addr, int32_t value, enum byte_code_commands type,
+                 struct heap *heap, struct var_map_map *var_map_map) {
+    int32_t is_in_var_map = get_int_bits(addr, 31, 31);
+
+    if (!is_in_var_map) {
+        heap_set(addr, type, value, heap);
+    } else {
+        int32_t map_index = get_int_bits(addr, 30, 16);
+        int32_t var_index = get_int_bits(addr, 15, 0);
+        var_map_set(type, value, var_index, map_index, var_map_map);
+    }
 }
 
 
@@ -371,6 +390,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             }
             case JRET: {
                 curr_command_addr = ret_stack_pop(interpreter->ret_stack);
+
+
 
                 // TODO remove var_map
 
@@ -407,6 +428,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case CALL: {
+                ret_stack_push(interpreter->ret_stack, curr_command_addr + 2);
                 curr_command_addr = byte_code[curr_command_addr + 1];
                 break;
             }
@@ -461,19 +483,27 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case VOID: {
-
+                // can't meet
+                break;
             }
 
             case PRINT: {
-
-            }
-            case ASSIGN: {
+                int32_t value = data_stack_pop(interpreter->data_stack).value;
+                int32_t addr = data_stack_pop(interpreter->data_stack).value;
 
             }
             case GET_DATA: {
 
             }
             case SET_DATA: {
+                struct var var = data_stack_pop(interpreter->data_stack);
+
+                if (var.type != PTR) {
+                    // different types
+                }
+
+                int32_t addr = var.value;
+
 
             }
             case GET_ADDR: {
@@ -663,7 +693,9 @@ int main() {
             3
     };
 
-    interpret(&my_interpreter, byte_code, main_program_start);
+//    interpret(&my_interpreter, byte_code, main_program_start);
+
+    get_by_addr(UINT32_MAX, &my_heap);
 
     return 0;
 }
