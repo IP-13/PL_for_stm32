@@ -255,6 +255,23 @@ void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_ma
 }
 
 
+void heap_free(struct heap *heap) {
+    for (size_t i = 0; i < heap->num_of_entries; i++) {
+        if (heap->data[i].num_of_links == 0) {
+            heap->data[i] = NULL_HEAP_ENTRY;
+            heap->num_of_entries--;
+        }
+    }
+
+    for (size_t i = 0; i < HEAP_SIZE; i++) {
+        if (heap->data[i].num_of_links == 0) {
+            heap->next_free_entry = i;
+            return;
+        }
+    }
+}
+
+
 struct heap_entry heap_get(uint32_t addr, struct heap *heap) {
     if (addr >= heap->num_of_entries) {
         // index out of bounds
@@ -276,7 +293,11 @@ void heap_set(uint32_t addr, enum byte_code_commands type, int32_t value, struct
 // return addr at which value was inserted
 uint32_t heap_push(enum byte_code_commands type, int32_t value, struct heap *heap) {
     if (heap->next_free_entry == HEAP_SIZE) {
-        // stack overflow
+        heap_free(heap);
+    }
+
+    if (heap->next_free_entry == HEAP_SIZE) {
+        // heap overflow
     }
 
     struct heap_entry heap_entry = {.num_of_links = 1, .type = type, .value = value};
@@ -284,6 +305,8 @@ uint32_t heap_push(enum byte_code_commands type, int32_t value, struct heap *hea
     heap->data[heap->next_free_entry] = heap_entry;
 
     heap->num_of_entries++;
+
+    uint32_t old_next_heap_entry = heap->next_free_entry;
 
     if (heap->num_of_entries == HEAP_SIZE) {
         heap->next_free_entry = HEAP_SIZE;
@@ -296,7 +319,31 @@ uint32_t heap_push(enum byte_code_commands type, int32_t value, struct heap *hea
         }
     }
 
-    return heap->num_of_entries - 1;
+    return old_next_heap_entry;
+}
+
+
+uint32_t heap_malloc(struct heap *heap) {
+    if (heap->next_free_entry == HEAP_SIZE) {
+        heap_free(heap);
+    }
+
+    if (heap->next_free_entry == HEAP_SIZE) {
+        // heap overflow
+    }
+
+    uint32_t old_next_free_entry = heap->next_free_entry;
+
+    heap->next_free_entry = HEAP_SIZE;
+    heap->num_of_entries++;
+
+    for (size_t i = old_next_free_entry + 1; i < HEAP_SIZE; i++) {
+        if (heap->data[i].num_of_links == 0) {
+            heap->next_free_entry = i;
+        }
+    }
+
+    return old_next_free_entry;
 }
 
 
@@ -486,31 +533,39 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 // can't meet
                 break;
             }
-
+                // itmova core
             case PRINT: {
                 int32_t value = data_stack_pop(interpreter->data_stack).value;
                 int32_t addr = data_stack_pop(interpreter->data_stack).value;
+
+            }
+            case ASSIGN: {
 
             }
             case GET_DATA: {
 
             }
             case SET_DATA: {
-                struct var var = data_stack_pop(interpreter->data_stack);
+                struct var data = data_stack_pop(interpreter->data_stack);
+                struct var ptr = data_stack_pop(interpreter->data_stack);
 
-                if (var.type != PTR) {
+                if (ptr.type != PTR) {
+                    // not a ptr
+                }
+
+                struct var var = get_by_addr(ptr.value, interpreter->heap, interpreter->var_map_map);
+
+                if (var.type != data.type) {
                     // different types
                 }
 
-                int32_t addr = var.value;
-
-
+                set_by_addr(ptr.value, data.value, data.type, interpreter->heap, interpreter->var_map_map);
             }
             case GET_ADDR: {
 
             }
             case MALLOC: {
-
+                data_stack_push(interpreter->data_stack, PTR, interpreter->heap->next_free_entry);
             }
             case AND: {
 
@@ -695,7 +750,6 @@ int main() {
 
 //    interpret(&my_interpreter, byte_code, main_program_start);
 
-    get_by_addr(UINT32_MAX, &my_heap);
 
     return 0;
 }
