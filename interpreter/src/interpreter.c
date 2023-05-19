@@ -30,7 +30,7 @@ struct var data_stack_pop(struct data_stack *stack) {
 }
 
 
-void data_stack_push(struct data_stack *stack, enum byte_code_commands type, void *value) {
+void data_stack_push(struct data_stack *stack, enum byte_code_commands type, int32_t value) {
     if (stack->num_of_entries == DATA_STACK_SIZE) {
         // stack overflow
     }
@@ -83,7 +83,7 @@ struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_ma
 }
 
 
-void var_map_set(enum byte_code_commands type, void *value, uint32_t var_index, uint32_t map_index,
+void var_map_set(enum byte_code_commands type, int32_t value, uint32_t var_index, uint32_t map_index,
                  struct var_map_map *var_map_map) {
     if (map_index >= var_map_map->num_of_entries) {
         // index out of bounds
@@ -103,7 +103,7 @@ void var_map_set(enum byte_code_commands type, void *value, uint32_t var_index, 
 }
 
 
-void var_map_push(enum byte_code_commands type, void *value, struct var_map_map *var_map_map) {
+void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_map *var_map_map) {
     if (var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries == VAR_MAP_SIZE) {
         // stack overflow
     }
@@ -165,7 +165,7 @@ static int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_co
     } else {
         uint32_t var_index = byte_code[++(*curr_command_addr)];
         uint32_t map_index = interpreter->var_map_map->num_of_entries - 1;
-        value = *((int32_t *) var_map_get(var_index, map_index, interpreter->var_map_map).value);
+        value = var_map_get(var_index, map_index, interpreter->var_map_map).value;
     }
 
     return value;
@@ -208,25 +208,45 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case FINT: {
-
+                // can't meet
+                break;
             }
             case FVAR: {
-
+                // can't meet
+                break;
             }
             case JT: {
+                struct var var = data_stack_pop(interpreter->data_stack);
+                if (var.type != BOOL) {
+                    // in condition was call of func that returns not bool value
+                }
 
+                if (var.value == 0) {
+                    curr_command_addr += byte_code[curr_command_addr + 1];
+                } else {
+                    curr_command_addr++;
+                }
+
+                break;
             }
             case CALL: {
-
+                curr_command_addr = byte_code[curr_command_addr + 1];
+                break;
             }
             case LIT: {
-
+                enum byte_code_commands type = byte_code[++curr_command_addr];
+                int32_t value = byte_code[++curr_command_addr];
+                data_stack_push(interpreter->data_stack, type, value);
+                break;
             }
             case VAR: {
-
+                struct var var = var_map_get(byte_code[++curr_command_addr],
+                                             interpreter->var_map_map->num_of_entries,
+                                             interpreter->var_map_map);
+                data_stack_push(interpreter->data_stack, var.type, var.value);
             }
             case OFC: {
-
+                break;
             }
             case RLIT: {
 
@@ -255,8 +275,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             case VOID: {
 
             }
-
-
 
 
             case PRINT: {

@@ -75,7 +75,7 @@ enum byte_code_commands {
 
 struct var {
     enum byte_code_commands type;
-    void *value;
+    int32_t value;
 };
 
 
@@ -92,7 +92,7 @@ struct var data_stack_top(struct data_stack *stack);
 struct var data_stack_pop(struct data_stack *stack);
 
 
-void data_stack_push(struct data_stack *stack, enum byte_code_commands type, void *value);
+void data_stack_push(struct data_stack *stack, enum byte_code_commands type, int32_t value);
 
 
 // ret_stack
@@ -127,11 +127,11 @@ struct var_map_map {
 struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_map *var_map_map);
 
 
-void var_map_set(enum byte_code_commands type, void *value, uint32_t var_index, uint32_t map_index,
+void var_map_set(enum byte_code_commands type, int32_t value, uint32_t var_index, uint32_t map_index,
                  struct var_map_map *var_map_map);
 
 
-void var_map_push(enum byte_code_commands type, void *value, struct var_map_map *var_map_map);
+void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_map *var_map_map);
 
 
 // heap

@@ -8,6 +8,7 @@ static const uint32_t NULL_RET_STACK_ENTRY = 0;
 static const struct var NULL_VAR_MAP_ENTRY = {.value = 0};
 static const struct heap_entry NULL_HEAP_ENTRY = {.value = 0, .num_of_links = 0};
 
+
 int main() {
     struct var data_stack_data[DATA_STACK_SIZE];
 
@@ -99,9 +100,7 @@ int main() {
             3
     };
 
-//    interpret(&interpreter, byte_code, main_program_start);
-
-
+    interpret(&interpreter, byte_code, main_program_start);
 
     return 0;
 }
