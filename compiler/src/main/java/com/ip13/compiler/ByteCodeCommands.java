@@ -46,12 +46,9 @@ public enum ByteCodeCommands {
     length(728),
     // math unary
     abs(735),
-    sin(736),
-    cos(737),
-    inc(738),
-    dec(739),
+    inc(736),
+    dec(737),
     // math binary
-    log(755),
     pow(756),
     sum(757),
     sub(758),
@@ -62,10 +59,7 @@ public enum ByteCodeCommands {
     max(763),
     less(764),
     greater(765),
-    equal(766),
     // math non-arg
-    PI(775),
-    E(776),
     random(777),
     // special
     MAIN(999);

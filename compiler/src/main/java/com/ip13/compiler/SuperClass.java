@@ -11,7 +11,7 @@ public class SuperClass {
     private static final List<String> byteCode = new ArrayList<>();
     private static final List<FuncInfo> funcList = new ArrayList<>();
     private static Map<String, VarInfo> varMap = new HashMap<>();
-    private static final List<String> stringLiteralsStorage = new ArrayList<>(); // addr in bytecode, value
+    private static final List<String> stringLiteralsStorage = new ArrayList<>();
     private static int entryPoint = 0; //
     private static final Stack<Integer> fromCycleStack = new Stack<>();
     private static final Stack<Integer> ifOperatorStack = new Stack<>();
