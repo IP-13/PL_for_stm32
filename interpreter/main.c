@@ -1,7 +1,3 @@
-#pragma once
-
-#pragma once
-
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -59,11 +55,8 @@ enum byte_code_commands {
     LIKE = 727,
     LENGTH = 728,
     ABS = 735,
-    SIN = 736,
-    COS = 737,
-    INC = 738,
-    DEC = 739,
-    LOG = 755,
+    INC = 736,
+    DEC = 737,
     POW = 756,
     SUM = 757,
     SUB = 758,
@@ -74,9 +67,6 @@ enum byte_code_commands {
     MAX = 763,
     LESS = 764,
     GREATER = 765,
-    EQUAL = 766,
-    PI = 775,
-    E = 776,
     RANDOM = 777,
     MAIN = 999
 };
@@ -84,8 +74,9 @@ enum byte_code_commands {
 
 // structs
 struct var {
-    enum byte_code_commands type;
     int32_t value;
+    uint32_t addr;
+    enum byte_code_commands type;
 };
 
 
@@ -114,9 +105,9 @@ struct var_map_map {
 
 
 struct heap_entry {
-    uint8_t num_of_links;
-    enum byte_code_commands type;
     int32_t value; // null by default
+    enum byte_code_commands type; // NOT_YET_DEFINED by default
+    uint8_t num_of_links;
 };
 
 
@@ -135,24 +126,20 @@ struct interpreter {
 };
 
 
-void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start);
-
-
-// GLOBAL STRUCTS
+// NULL VALUE STRUCTS
 const struct var NULL_DATA_STACK_ENTRY = {.type = NOT_YET_DEFINED_TYPE, .value = 0};
 const uint32_t NULL_RET_STACK_ENTRY = 0;
 const struct var NULL_VAR_MAP_ENTRY = {.type = NOT_YET_DEFINED_TYPE, .value = 0};
 const struct heap_entry NULL_HEAP_ENTRY = {.num_of_links = 0, .type = NOT_YET_DEFINED_TYPE, .value = 0,};
 
 
-// IMPLEMENTATION
-struct var data_stack_top(struct data_stack *stack) {
+// FUNCTIONS
+struct var *data_stack_top(struct data_stack *stack) {
     if (stack->num_of_entries == 0) {
         // stack underflow
     }
 
-    struct var top = stack->data[stack->num_of_entries - 1];
-    return top;
+    return &stack->data[stack->num_of_entries - 1];
 }
 
 
@@ -167,23 +154,22 @@ struct var data_stack_pop(struct data_stack *stack) {
 }
 
 
-void data_stack_push(struct data_stack *stack, enum byte_code_commands type, int32_t value) {
+void data_stack_push(struct data_stack *stack, int32_t value, uint32_t addr, enum byte_code_commands type) {
     if (stack->num_of_entries == DATA_STACK_SIZE) {
         // stack overflow
     }
 
-    struct var var = {.type = type, .value = value};
+    struct var var = {.value = value, .addr = addr, .type = type};
     stack->data[stack->num_of_entries++] = var;
 }
 
 
-uint32_t ret_stack_top(struct ret_stack *stack) {
+uint32_t *ret_stack_top(struct ret_stack *stack) {
     if (stack->num_of_entries == 0) {
         // stack underflow
     }
 
-    uint32_t top = stack->data[stack->num_of_entries - 1];
-    return top;
+    return &stack->data[stack->num_of_entries - 1];
 }
 
 
@@ -220,8 +206,11 @@ struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_ma
 }
 
 
-void var_map_set(enum byte_code_commands type, int32_t value,
-                 uint32_t var_index, uint32_t map_index, struct var_map_map *var_map_map) {
+void var_map_set(int32_t value,
+                 enum byte_code_commands type,
+                 uint32_t var_index,
+                 uint32_t map_index,
+                 struct var_map_map *var_map_map) {
     if (map_index >= var_map_map->num_of_entries) {
         // index out of bounds
     }
@@ -240,14 +229,20 @@ void var_map_set(enum byte_code_commands type, int32_t value,
 }
 
 
-void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_map *var_map_map) {
+void var_map_push(int32_t value, enum byte_code_commands type, struct var_map_map *var_map_map) {
     if (var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries == VAR_MAP_SIZE) {
         // stack overflow
     }
 
-    struct var var = {.type = type, .value = value};
-
     int32_t index_to_push = var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries;
+
+    uint32_t addr = 1;
+    addr = addr << 15;
+    addr += (var_map_map->num_of_entries - 1);
+    addr = addr << 16;
+    addr += index_to_push;
+
+    struct var var = {.value = value, .addr = addr, .type = type};
 
     var_map_map->data[var_map_map->num_of_entries - 1].data[index_to_push] = var;
 
@@ -255,7 +250,17 @@ void var_map_push(enum byte_code_commands type, int32_t value, struct var_map_ma
 }
 
 
-void heap_free(struct heap *heap) {
+void remove_var_map(struct var_map_map *var_map_map) {
+    var_map_map->num_of_entries--;
+    for (size_t i = 0; i < var_map_map->data[var_map_map->num_of_entries].num_of_entries; i++) {
+        var_map_map->data[var_map_map->num_of_entries].data[i] = NULL_VAR_MAP_ENTRY;
+    }
+
+    var_map_map->data[var_map_map->num_of_entries].num_of_entries = 0;
+}
+
+
+void heap_collect_garbage(struct heap *heap) {
     for (size_t i = 0; i < heap->num_of_entries; i++) {
         if (heap->data[i].num_of_links == 0) {
             heap->data[i] = NULL_HEAP_ENTRY;
@@ -281,8 +286,8 @@ struct heap_entry heap_get(uint32_t addr, struct heap *heap) {
 }
 
 
-void heap_set(uint32_t addr, enum byte_code_commands type, int32_t value, struct heap *heap) {
-    if (type != heap->data[addr].type) {
+void heap_set(uint32_t addr, int32_t value, enum byte_code_commands type, struct heap *heap) {
+    if (heap->data[addr].type != NOT_YET_DEFINED_TYPE && type != heap->data[addr].type) {
         // different types
     }
 
@@ -290,56 +295,25 @@ void heap_set(uint32_t addr, enum byte_code_commands type, int32_t value, struct
 }
 
 
-// return addr at which value was inserted
-uint32_t heap_push(enum byte_code_commands type, int32_t value, struct heap *heap) {
+uint32_t heap_malloc(struct heap *heap) { // return allocated addr
     if (heap->next_free_entry == HEAP_SIZE) {
-        heap_free(heap);
+        heap_collect_garbage(heap);
     }
 
     if (heap->next_free_entry == HEAP_SIZE) {
         // heap overflow
     }
-
-    struct heap_entry heap_entry = {.num_of_links = 1, .type = type, .value = value};
-
-    heap->data[heap->next_free_entry] = heap_entry;
 
     heap->num_of_entries++;
-
-    uint32_t old_next_heap_entry = heap->next_free_entry;
-
-    if (heap->num_of_entries == HEAP_SIZE) {
-        heap->next_free_entry = HEAP_SIZE;
-    } else {
-        for (size_t i = heap->next_free_entry + 1; i < HEAP_SIZE; i++) {
-            if (heap->data[i].num_of_links == 0) {
-                heap->next_free_entry = i;
-                break;
-            }
-        }
-    }
-
-    return old_next_heap_entry;
-}
-
-
-uint32_t heap_malloc(struct heap *heap) {
-    if (heap->next_free_entry == HEAP_SIZE) {
-        heap_free(heap);
-    }
-
-    if (heap->next_free_entry == HEAP_SIZE) {
-        // heap overflow
-    }
 
     uint32_t old_next_free_entry = heap->next_free_entry;
 
     heap->next_free_entry = HEAP_SIZE;
-    heap->num_of_entries++;
 
     for (size_t i = old_next_free_entry + 1; i < HEAP_SIZE; i++) {
         if (heap->data[i].num_of_links == 0) {
             heap->next_free_entry = i;
+            break;
         }
     }
 
@@ -364,7 +338,7 @@ void heap_dec_num_of_links(uint32_t addr, struct heap *heap) {
 }
 
 
-int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_code, struct interpreter *interpreter) {
+int32_t get_from_cycle_value(uint32_t *curr_command_addr, const int32_t *byte_code, struct interpreter *interpreter) {
     int32_t value;
 
     if (byte_code[++(*curr_command_addr)] == FINT) {
@@ -379,34 +353,37 @@ int32_t get_fint_fvar(uint32_t *curr_command_addr, const int32_t *byte_code, str
 }
 
 
-int32_t get_int_bits(uint32_t bits, int32_t from, int32_t to) { // from and to includes
+uint32_t get_int_bits(uint32_t bits, int32_t from, int32_t to) { // from and to include
     return bits << (31 - from) >> (to + 31 - from);
 }
 
 
-struct var get_by_addr(int32_t addr, struct heap *heap, struct var_map_map *var_map_map) {
-    int32_t is_in_var_map = get_int_bits(addr, 31, 31);
+struct var get_by_addr(uint32_t addr, struct heap *heap, struct var_map_map *var_map_map) {
+    uint32_t is_in_var_map = get_int_bits(addr, 31, 31);
 
     if (!is_in_var_map) {
         struct heap_entry heap_entry = heap_get(addr, heap);
         return (struct var) {.type = heap_entry.type, .value = heap_entry.value};
     } else {
-        int32_t map_index = get_int_bits(addr, 30, 16);
-        int32_t var_index = get_int_bits(addr, 15, 0);
+        uint32_t map_index = get_int_bits(addr, 30, 16);
+        uint32_t var_index = get_int_bits(addr, 15, 0);
         return var_map_get(var_index, map_index, var_map_map);
     }
 }
 
 
-void set_by_addr(int32_t addr, int32_t value, enum byte_code_commands type,
-                 struct heap *heap, struct var_map_map *var_map_map) {
-    int32_t is_in_var_map = get_int_bits(addr, 31, 31);
+void set_by_addr(uint32_t addr,
+                 int32_t value,
+                 enum byte_code_commands type,
+                 struct heap *heap,
+                 struct var_map_map *var_map_map) {
+    uint32_t is_in_var_map = get_int_bits(addr, 31, 31);
 
     if (!is_in_var_map) {
-        heap_set(addr, type, value, heap);
+        heap_set(addr, value, type, heap);
     } else {
-        int32_t map_index = get_int_bits(addr, 30, 16);
-        int32_t var_index = get_int_bits(addr, 15, 0);
+        uint32_t map_index = get_int_bits(addr, 30, 16);
+        uint32_t var_index = get_int_bits(addr, 15, 0);
         var_map_set(type, value, var_index, map_index, var_map_map);
     }
 }
@@ -418,8 +395,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
     while (byte_code[curr_command_addr] != EXIT) {
         switch (byte_code[curr_command_addr]) {
             case EXIT: {
-                // exit(0);
-                break;
+                return;
             }
             case JMP: {
                 curr_command_addr = byte_code[curr_command_addr + 1];
@@ -437,17 +413,13 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             }
             case JRET: {
                 curr_command_addr = ret_stack_pop(interpreter->ret_stack);
-
-
-
-                // TODO remove var_map
-
+                remove_var_map(interpreter->var_map_map);
                 break;
             }
             case LOOP: {
-                int32_t lower_bound = get_fint_fvar(&curr_command_addr, byte_code, interpreter);
-                int32_t upper_bound = get_fint_fvar(&curr_command_addr, byte_code, interpreter);
-                int32_t step = get_fint_fvar(&curr_command_addr, byte_code, interpreter);
+                int32_t lower_bound = get_from_cycle_value(&curr_command_addr, byte_code, interpreter);
+                int32_t upper_bound = get_from_cycle_value(&curr_command_addr, byte_code, interpreter);
+                int32_t step = get_from_cycle_value(&curr_command_addr, byte_code, interpreter);
                 int32_t counter = (upper_bound - lower_bound) / step;
                 byte_code[++curr_command_addr] = counter;
                 break;
@@ -477,34 +449,36 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             case CALL: {
                 ret_stack_push(interpreter->ret_stack, curr_command_addr + 2);
                 curr_command_addr = byte_code[curr_command_addr + 1];
+
+                // TODO initialize args
+
                 break;
             }
             case LIT: {
                 enum byte_code_commands type = byte_code[++curr_command_addr];
                 int32_t value = byte_code[++curr_command_addr];
-                data_stack_push(interpreter->data_stack, type, value);
+//                data_stack_push(interpreter->data_stack, LIT, value);
                 break;
             }
             case VAR: {
-                struct var var = var_map_get(byte_code[++curr_command_addr],
-                                             interpreter->var_map_map->num_of_entries,
-                                             interpreter->var_map_map);
-                data_stack_push(interpreter->data_stack, var.type, var.value);
+//                data_stack_push(interpreter->data_stack, VAR, byte_code[++curr_command_addr]);
+                break;
             }
             case OFC: {
+//                data_stack_top(interpreter->data_stack)->type = LIT;
                 break;
             }
             case RLIT: {
                 enum byte_code_commands type = byte_code[++curr_command_addr];
                 int32_t value = byte_code[++curr_command_addr];
-                data_stack_push(interpreter->data_stack, type, value);
+//                data_stack_push(interpreter->data_stack, type, value);
                 break;
             }
             case RVAR: {
-                struct var var = var_map_get(byte_code[++curr_command_addr],
-                                             interpreter->var_map_map->num_of_entries,
-                                             interpreter->var_map_map);
-                data_stack_push(interpreter->data_stack, var.type, var.value);
+//                struct var var = var_map_get(byte_code[++curr_command_addr],
+//                                             interpreter->var_map_map->num_of_entries,
+//                                             interpreter->var_map_map);
+//                data_stack_push(interpreter->data_stack, var.type, var.value);
             }
             case ROFC: {
                 break;
@@ -565,7 +539,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case MALLOC: {
-                data_stack_push(interpreter->data_stack, PTR, interpreter->heap->next_free_entry);
+//                data_stack_push(interpreter->data_stack, PTR, interpreter->heap->next_free_entry);
             }
             case AND: {
 
@@ -591,19 +565,10 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             case ABS: {
 
             }
-            case SIN: {
-
-            }
-            case COS: {
-
-            }
             case INC: {
 
             }
             case DEC: {
-
-            }
-            case LOG: {
 
             }
             case POW: {
@@ -634,15 +599,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case GREATER: {
-
-            }
-            case EQUAL: {
-
-            }
-            case PI: {
-
-            }
-            case E: {
 
             }
             case RANDOM: {
@@ -749,7 +705,6 @@ int main() {
     };
 
 //    interpret(&my_interpreter, byte_code, main_program_start);
-
 
     return 0;
 }
