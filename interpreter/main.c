@@ -75,7 +75,6 @@ enum byte_code_commands {
 // structs
 struct var {
     int32_t value;
-    uint32_t addr;
     enum byte_code_commands type;
 };
 
@@ -127,10 +126,10 @@ struct interpreter {
 
 
 // NULL VALUE STRUCTS
-const struct var NULL_DATA_STACK_ENTRY = {.type = NOT_YET_DEFINED_TYPE, .value = 0};
+const struct var NULL_DATA_STACK_ENTRY = {.value = 0, .type = NOT_YET_DEFINED_TYPE};
 const uint32_t NULL_RET_STACK_ENTRY = 0;
-const struct var NULL_VAR_MAP_ENTRY = {.type = NOT_YET_DEFINED_TYPE, .value = 0};
-const struct heap_entry NULL_HEAP_ENTRY = {.num_of_links = 0, .type = NOT_YET_DEFINED_TYPE, .value = 0,};
+const struct var NULL_VAR_MAP_ENTRY = {.value = 0, .type = NOT_YET_DEFINED_TYPE};
+const struct heap_entry NULL_HEAP_ENTRY = {.value = 0, .type = NOT_YET_DEFINED_TYPE, .num_of_links = 0};
 
 
 // FUNCTIONS
@@ -154,12 +153,12 @@ struct var data_stack_pop(struct data_stack *stack) {
 }
 
 
-void data_stack_push(struct data_stack *stack, int32_t value, uint32_t addr, enum byte_code_commands type) {
+void data_stack_push(int32_t value, enum byte_code_commands type, struct data_stack *stack) {
     if (stack->num_of_entries == DATA_STACK_SIZE) {
         // stack overflow
     }
 
-    struct var var = {.value = value, .addr = addr, .type = type};
+    struct var var = {.value = value, .type = type};
     stack->data[stack->num_of_entries++] = var;
 }
 
@@ -184,7 +183,7 @@ uint32_t ret_stack_pop(struct ret_stack *stack) {
 }
 
 
-void ret_stack_push(struct ret_stack *stack, uint32_t top) {
+void ret_stack_push(uint32_t top, struct ret_stack *stack) {
     if (stack->num_of_entries == RET_STACK_SIZE) {
         // stack overflow
     }
@@ -236,13 +235,7 @@ void var_map_push(int32_t value, enum byte_code_commands type, struct var_map_ma
 
     int32_t index_to_push = var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries;
 
-    uint32_t addr = 1;
-    addr = addr << 15;
-    addr += (var_map_map->num_of_entries - 1);
-    addr = addr << 16;
-    addr += index_to_push;
-
-    struct var var = {.value = value, .addr = addr, .type = type};
+    struct var var = {.value = value, .type = type};
 
     var_map_map->data[var_map_map->num_of_entries - 1].data[index_to_push] = var;
 
@@ -439,7 +432,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 }
 
                 if (var.value == 0) {
-                    curr_command_addr += byte_code[curr_command_addr + 1];
+                    curr_command_addr += (byte_code[curr_command_addr + 1] - 1);
                 } else {
                     curr_command_addr++;
                 }
@@ -447,25 +440,24 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case CALL: {
-                ret_stack_push(interpreter->ret_stack, curr_command_addr + 2);
+                ret_stack_push(curr_command_addr + 2, interpreter->ret_stack);
                 curr_command_addr = byte_code[curr_command_addr + 1];
 
-                // TODO initialize args
+                // TODO create var_map and put there args
 
                 break;
             }
             case LIT: {
                 enum byte_code_commands type = byte_code[++curr_command_addr];
                 int32_t value = byte_code[++curr_command_addr];
-//                data_stack_push(interpreter->data_stack, LIT, value);
+                data_stack_push(value, type, interpreter->data_stack);
                 break;
             }
-            case VAR: {
-//                data_stack_push(interpreter->data_stack, VAR, byte_code[++curr_command_addr]);
+            case VAR: { // in this case value is the index of var 
+                data_stack_push(byte_code[++curr_command_addr], VAR, interpreter->data_stack);
                 break;
             }
             case OFC: {
-//                data_stack_top(interpreter->data_stack)->type = LIT;
                 break;
             }
             case RLIT: {
