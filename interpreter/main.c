@@ -453,7 +453,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 data_stack_push(value, type, interpreter->data_stack);
                 break;
             }
-            case VAR: { // in this case value is the index of var 
+            case VAR: { // in this case value is the index of var
                 data_stack_push(byte_code[++curr_command_addr], VAR, interpreter->data_stack);
                 break;
             }
@@ -463,14 +463,15 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             case RLIT: {
                 enum byte_code_commands type = byte_code[++curr_command_addr];
                 int32_t value = byte_code[++curr_command_addr];
-//                data_stack_push(interpreter->data_stack, type, value);
+                data_stack_push(value, type, interpreter->data_stack);
                 break;
             }
             case RVAR: {
-//                struct var var = var_map_get(byte_code[++curr_command_addr],
-//                                             interpreter->var_map_map->num_of_entries,
-//                                             interpreter->var_map_map);
-//                data_stack_push(interpreter->data_stack, var.type, var.value);
+                struct var var = var_map_get(byte_code[++curr_command_addr],
+                                             interpreter->var_map_map->num_of_entries,
+                                             interpreter->var_map_map);
+                data_stack_push(var.value, var.type, interpreter->data_stack);
+                break;
             }
             case ROFC: {
                 break;
@@ -501,8 +502,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             }
                 // itmova core
             case PRINT: {
-                int32_t value = data_stack_pop(interpreter->data_stack).value;
-                int32_t addr = data_stack_pop(interpreter->data_stack).value;
 
             }
             case ASSIGN: {
@@ -526,9 +525,23 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 }
 
                 set_by_addr(ptr.value, data.value, data.type, interpreter->heap, interpreter->var_map_map);
+
+                break;
             }
             case GET_ADDR: {
+                struct var var = data_stack_pop(interpreter->data_stack);
+                if (var.type != VAR) {
+                    // literal is passed to the get_addr function, which is not right
+                }
 
+                int32_t addr = var.value;
+                enum byte_code_commands type = var_map_get(addr,
+                                                           interpreter->var_map_map->num_of_entries - 1,
+                                                           interpreter->var_map_map).type;
+
+                data_stack_push(var.value, type, interpreter->data_stack);
+
+                break;
             }
             case MALLOC: {
 //                data_stack_push(interpreter->data_stack, PTR, interpreter->heap->next_free_entry);
