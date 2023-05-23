@@ -13,26 +13,11 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """ 
-                my_func(S1 : string, S2 : string) : int
-                START
-                FROM 1 TO 10 WITH 1:
-                START
-                print(10);
-                FINISH
-                RETURN "123";
-                FINISH
-                                
-                my_func2() : void
-                START
-                F :float;
-                FINISH
                 MAIN
-                IF less(2.33, 3):
-                START
-                S : string;
-                print(my_func("qwerty", "123"));
-                my_func2();
-                FINISH
+                random_int();
+                random_string();
+                random_float();
+                random_bool();
                 """;
 
         ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
@@ -45,7 +30,6 @@ public class Main {
         SuperClass.showByteCode(true);
         System.out.println("______________________________________");
         SuperClass.showByteCodeInNumberFormat(true);
-
     }
 }
 

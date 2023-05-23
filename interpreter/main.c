@@ -64,10 +64,8 @@ enum byte_code_commands {
     MUL = 759,
     DIV = 760,
     MOD = 761,
-    MIN = 762,
-    MAX = 763,
-    LESS = 764,
-    GREATER = 765,
+    LESS = 762,
+    GREATER = 763,
     PI = 775,
     E = 776,
     RANDOM_INT = 777,
@@ -893,33 +891,315 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case POW: {
-                
+                struct var arg_power = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg_num = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+
+                if (arg_power.type != INT && arg_power.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg_num.type != INT && arg_power.type != FLT) {
+                    // wrong argument
+                }
+
+                float power = int_to_float(arg_power.value);
+                float num = int_to_float(arg_num.value);
+
+                if (power < 1 && power > 0 && num < 0) {
+                    // arithmetic exception
+                }
+
+                float res = powf(num, power);
+
+                data_stack_push(float_to_int(res), FLT, interpreter->data_stack);
+
+                break;
             }
             case SUM: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    float sum = int_to_float(arg1_value) + int_to_float(arg2_value);
+                    data_stack_push(float_to_int(sum), FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    float sum = int_to_float(arg1_value) + (float) arg2_value;
+                    data_stack_push(float_to_int(sum), FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    float sum = (float) arg1_value + int_to_float(arg2_value);
+                    data_stack_push(float_to_int(sum), FLT, interpreter->data_stack);
+                } else {
+                    int32_t sum = arg2_value + arg1_value;
+                    data_stack_push(sum, INT, interpreter->data_stack);
+                }
+
+                break;
             }
             case SUB: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    float sub = int_to_float(arg1_value) - int_to_float(arg2_value);
+                    data_stack_push(float_to_int(sub), FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    float sub = int_to_float(arg1_value) - (float) arg2_value;
+                    data_stack_push(float_to_int(sub), FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    float sub = (float) arg1_value - int_to_float(arg2_value);
+                    data_stack_push(float_to_int(sub), FLT, interpreter->data_stack);
+                } else {
+                    int32_t sub = arg2_value - arg1_value;
+                    data_stack_push(sub, INT, interpreter->data_stack);
+                }
+
+                break;
             }
             case MUL: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    float mul = int_to_float(arg1_value) * int_to_float(arg2_value);
+                    data_stack_push(float_to_int(mul), FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    float mul = int_to_float(arg1_value) * (float) arg2_value;
+                    data_stack_push(float_to_int(mul), FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    float mul = (float) arg1_value * int_to_float(arg2_value);
+                    data_stack_push(float_to_int(mul), FLT, interpreter->data_stack);
+                } else {
+                    int32_t mul = arg2_value * arg1_value;
+                    data_stack_push(mul, INT, interpreter->data_stack);
+                }
+
+                break;
             }
             case DIV: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    float numerator = int_to_float(arg1_value);
+                    float denominator = int_to_float(arg2_value);
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    float div = numerator / denominator;
+
+                    data_stack_push(float_to_int(div), FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    float numerator = int_to_float(arg1_value);
+                    float denominator = (float) arg2_value;
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    float div = numerator / denominator;
+
+                    data_stack_push(float_to_int(div), FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    float numerator = (float) arg1_value;
+                    float denominator = int_to_float(arg2_value);
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    float div = numerator / denominator;
+
+                    data_stack_push(float_to_int(div), FLT, interpreter->data_stack);
+                } else {
+                    int numerator = arg1_value;
+                    int denominator = arg2_value;
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    int32_t div = numerator / denominator;
+
+                    data_stack_push(div, INT, interpreter->data_stack);
+                }
+
+                break;
             }
             case MOD: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
-            }
-            case MIN: {
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
 
-            }
-            case MAX: {
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
 
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    float numerator = int_to_float(arg1_value);
+                    float denominator = int_to_float(arg2_value);
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    float mod = fmodf(numerator, denominator);
+
+                    data_stack_push(float_to_int(mod), FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    float numerator = int_to_float(arg1_value);
+                    float denominator = (float) arg2_value;
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    float mod = fmodf(numerator, denominator);
+
+                    data_stack_push(float_to_int(mod), FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    float numerator = (float) arg1_value;
+                    float denominator = int_to_float(arg2_value);
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    float mod = fmodf(numerator, denominator);
+
+                    data_stack_push(float_to_int(mod), FLT, interpreter->data_stack);
+                } else {
+                    int32_t numerator = arg1_value;
+                    int32_t denominator = arg2_value;
+
+                    if (denominator == 0) {
+                        // division by 0
+                    }
+
+                    int32_t mod = numerator % denominator;
+
+                    data_stack_push(mod, INT, interpreter->data_stack);
+                }
+
+                break;
             }
             case LESS: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    int32_t less = int_to_float(arg1_value) < int_to_float(arg2_value);
+                    data_stack_push(less, FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    int32_t less = int_to_float(arg1_value) < (float) arg2_value;
+                    data_stack_push(less, FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    int32_t less = (float) arg1_value < int_to_float(arg2_value);
+                    data_stack_push(less, FLT, interpreter->data_stack);
+                } else {
+                    int32_t less = arg2_value < arg1_value;
+                    data_stack_push(less, INT, interpreter->data_stack);
+                }
+
+                break;
             }
             case GREATER: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+
+                if (arg2.type != INT && arg2.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                int32_t arg2_value = arg2.value;
+                int32_t arg1_value = arg1.value;
+
+                if (arg1.type == FLT && arg2.type == FLT) {
+                    int32_t greater = int_to_float(arg1_value) > int_to_float(arg2_value);
+                    data_stack_push(greater, FLT, interpreter->data_stack);
+                } else if (arg1.type == FLT) {
+                    int32_t greater = int_to_float(arg1_value) > (float) arg2_value;
+                    data_stack_push(greater, FLT, interpreter->data_stack);
+                } else if (arg2.type == FLT) {
+                    int32_t greater = (float) arg1_value > int_to_float(arg2_value);
+                    data_stack_push(greater, FLT, interpreter->data_stack);
+                } else {
+                    int32_t greater = arg2_value > arg1_value;
+                    data_stack_push(greater, INT, interpreter->data_stack);
+                }
+
+                break;
+            }
+            case PI: {
+
+            }
+            case E: {
 
             }
             case RANDOM_STRING: {
@@ -1040,6 +1320,5 @@ int main() {
 
 //    interpret(&my_interpreter, byte_code, main_program_start);
 
-printf("%f", M_E);
     return 0;
 }
