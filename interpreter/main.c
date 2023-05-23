@@ -243,18 +243,6 @@ void var_map_push(int32_t value, enum byte_code_commands type, struct var_map_ma
 }
 
 
-void remove_var_map(struct var_map_map *var_map_map) {
-    var_map_map->num_of_entries--;
-    for (size_t i = 0; i < var_map_map->data[var_map_map->num_of_entries].num_of_entries; i++) {
-        var_map_map->data[var_map_map->num_of_entries].data[i] = NULL_VAR_MAP_ENTRY;
-    }
-
-    var_map_map->data[var_map_map->num_of_entries].num_of_entries = 0;
-
-    // TODO dec num_of_links if pointer
-}
-
-
 void heap_collect_garbage(struct heap *heap) {
     for (size_t i = 0; i < heap->num_of_entries; i++) {
         if (heap->data[i].num_of_links == 0) {
@@ -317,6 +305,12 @@ uint32_t heap_malloc(struct heap *heap) { // return allocated addr
 
 
 void heap_dec_num_of_links(uint32_t addr, struct heap *heap) {
+    if (addr >> 31 != 0) {
+        // reference to a non-heap addr
+        // heap addr starts with 0
+        // with 1 starts var_map addr
+    }
+
     if (heap->data[addr].num_of_links == 0) {
         return; // memory is free already
     }
@@ -330,6 +324,34 @@ void heap_dec_num_of_links(uint32_t addr, struct heap *heap) {
             heap->next_free_entry = addr;
         }
     }
+}
+
+
+void heap_inc_num_of_links(uint32_t addr, struct heap *heap) {
+    if (addr >> 31 != 0) {
+        // reference to a non-heap addr
+        // heap addr starts with 0
+        // with 1 starts var_map addr
+    }
+
+    heap->data[addr].num_of_links++;
+}
+
+
+void remove_var_map(struct interpreter *interpreter) { // removes (nullifies) top var_map
+    struct var_map_map *var_map_map = interpreter->var_map_map;
+    var_map_map->num_of_entries--;
+    for (size_t i = 0; i < var_map_map->data[var_map_map->num_of_entries].num_of_entries; i++) {
+        struct var var = var_map_map->data[var_map_map->num_of_entries].data[i];
+
+        if (var.type == PTR) {
+            heap_dec_num_of_links(var.value, interpreter->heap);
+        }
+
+        var_map_map->data[var_map_map->num_of_entries].data[i] = NULL_VAR_MAP_ENTRY;
+    }
+
+    var_map_map->data[var_map_map->num_of_entries].num_of_entries = 0;
 }
 
 
@@ -408,7 +430,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             }
             case JRET: {
                 curr_command_addr = ret_stack_pop(interpreter->ret_stack);
-                remove_var_map(interpreter->var_map_map);
+                remove_var_map(interpreter);
                 break;
             }
             case LOOP: {
@@ -523,7 +545,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case ASSIGN: {
-                struct var var_value = data_stack_pop(interpreter->data_stack); // assigning value
+                struct var new_data = data_stack_pop(interpreter->data_stack); // assigning value
                 struct var var = data_stack_pop(interpreter->data_stack); // var to assign value to
 
                 if (var.type != VAR) { // if passing arg through var, then its type = VAR
@@ -531,21 +553,24 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                     // here should have been name of var
                 }
 
-                enum byte_code_commands req_type = var_map_get(var.value, // var.value = var index
-                                                               interpreter->var_map_map->num_of_entries,
-                                                               interpreter->var_map_map).type;
+                struct var old_data = var_map_get(var.value, // var.value = var index
+                                                  interpreter->var_map_map->num_of_entries,
+                                                  interpreter->var_map_map);
 
-                if (req_type != var_value.type) {
+                if (old_data.type != new_data.type) {
                     // different types
                 }
 
-                var_map_set(var_value.value,
-                            req_type,
+                if (old_data.type == PTR) {
+                    heap_dec_num_of_links(old_data.value, interpreter->heap);
+                    heap_inc_num_of_links(new_data.value, interpreter->heap);
+                }
+
+                var_map_set(new_data.value,
+                            new_data.type,
                             var.value,
                             interpreter->var_map_map->num_of_entries,
                             interpreter->var_map_map);
-
-                // TODO inc num_of_links if ptr
 
                 break;
             }
@@ -612,7 +637,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 data_stack_push(interpreter->heap->next_free_entry, PTR, interpreter->data_stack);
             }
             case AND: {
-
+                
             }
             case OR: {
 
