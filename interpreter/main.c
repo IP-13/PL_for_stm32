@@ -67,7 +67,10 @@ enum byte_code_commands {
     MAX = 763,
     LESS = 764,
     GREATER = 765,
-    RANDOM = 777,
+    RANDOM_STRING = 444,
+    RANDOM_BOOL = 555,
+    RANDOM_FLOAT = 666,
+    RANDOM_INT = 777,
     MAIN = 999
 };
 
@@ -844,7 +847,16 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             case GREATER: {
 
             }
-            case RANDOM: {
+            case RANDOM_STRING: {
+                
+            }
+            case RANDOM_BOOL : {
+
+            }
+            case RANDOM_FLOAT: {
+
+            }
+            case RANDOM_INT : {
 
             }
             case MAIN: {
