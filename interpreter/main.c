@@ -250,6 +250,8 @@ void remove_var_map(struct var_map_map *var_map_map) {
     }
 
     var_map_map->data[var_map_map->num_of_entries].num_of_entries = 0;
+
+    // TODO dec num_of_links if pointer
 }
 
 
@@ -443,7 +445,23 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 ret_stack_push(curr_command_addr + 2, interpreter->ret_stack);
                 curr_command_addr = byte_code[curr_command_addr + 1];
 
-                // TODO create var_map and put there args
+                interpreter->var_map_map->num_of_entries++; // var_map for func created
+
+                uint8_t num_of_args = byte_code[++curr_command_addr];
+                struct var vars[num_of_args];
+
+                for (uint32_t i = num_of_args; i > 0; i--) {
+                    enum byte_code_commands req_type = byte_code[curr_command_addr + i];
+                    struct var var = data_stack_pop(interpreter->data_stack);
+                    if (req_type != var.type) {
+                        // different types
+                    }
+                    vars[i - 1] = var;
+                }
+
+                for (uint32_t i = 0; i < num_of_args; i++) {
+                    var_map_push(vars[i].value, vars[i].type, interpreter->var_map_map);
+                }
 
                 break;
             }
@@ -505,10 +523,49 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case ASSIGN: {
+                struct var var_value = data_stack_pop(interpreter->data_stack); // assigning value
+                struct var var = data_stack_pop(interpreter->data_stack); // var to assign value to
 
+                if (var.type != VAR) { // if passing arg through var, then its type = VAR
+                    // wrong argument
+                    // here should have been name of var
+                }
+
+                enum byte_code_commands req_type = var_map_get(var.value, // var.value = var index
+                                                               interpreter->var_map_map->num_of_entries,
+                                                               interpreter->var_map_map).type;
+
+                if (req_type != var_value.type) {
+                    // different types
+                }
+
+                var_map_set(var_value.value,
+                            req_type,
+                            var.value,
+                            interpreter->var_map_map->num_of_entries,
+                            interpreter->var_map_map);
+
+                // TODO inc num_of_links if ptr
+
+                break;
             }
             case GET_DATA: {
+                struct var ptr = data_stack_pop(interpreter->data_stack); // ptr.value = ptr index in var_map
 
+                if (ptr.type != VAR) {
+                    // wrong argument
+                    // here should have been name of ptr
+                }
+
+                int32_t data_addr = var_map_get(ptr.value,
+                                                interpreter->var_map_map->num_of_entries,
+                                                interpreter->var_map_map).value;
+
+                struct var data = get_by_addr(data_addr, interpreter->heap, interpreter->var_map_map);
+
+                data_stack_push(data.value, data.type, interpreter->data_stack);
+
+                break;
             }
             case SET_DATA: {
                 struct var data = data_stack_pop(interpreter->data_stack);
@@ -529,22 +586,30 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case GET_ADDR: {
-                struct var var = data_stack_pop(interpreter->data_stack);
+                struct var var = data_stack_pop(interpreter->data_stack); // var.value = var index in var_map
+
                 if (var.type != VAR) {
-                    // literal is passed to the get_addr function, which is not right
+                    // wrong argument
+                    // here should have been name of var
                 }
 
-                int32_t addr = var.value;
-                enum byte_code_commands type = var_map_get(addr,
+                int32_t addr = 1 << 15;
+                addr += (interpreter->var_map_map->num_of_entries - 1);
+                addr = addr << 16;
+                addr += var.value;
+
+                int32_t var_index = var.value;
+
+                enum byte_code_commands type = var_map_get(var_index,
                                                            interpreter->var_map_map->num_of_entries - 1,
                                                            interpreter->var_map_map).type;
 
-                data_stack_push(var.value, type, interpreter->data_stack);
+                data_stack_push(addr, type, interpreter->data_stack);
 
                 break;
             }
             case MALLOC: {
-//                data_stack_push(interpreter->data_stack, PTR, interpreter->heap->next_free_entry);
+                data_stack_push(interpreter->heap->next_free_entry, PTR, interpreter->data_stack);
             }
             case AND: {
 
@@ -610,6 +675,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case MAIN: {
+                // TODO create var map for main func
                 break;
             }
             default: {
