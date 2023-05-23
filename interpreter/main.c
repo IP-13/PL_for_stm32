@@ -406,6 +406,17 @@ void set_by_addr(uint32_t addr,
 }
 
 
+struct var get_data_from_data_stack_top(struct data_stack *stack, struct var_map_map *var_map_map) {
+    struct var var = data_stack_pop(stack);
+
+    if (var.type == VAR) { // if var.type == VAR, then var.value = var index in var_map
+        var = var_map_get(var.value, var_map_map->num_of_entries, var_map_map);
+    }
+
+    return var;
+}
+
+
 void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start) {
     uint32_t curr_command_addr = start;
 
@@ -637,16 +648,54 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 data_stack_push(interpreter->heap->next_free_entry, PTR, interpreter->data_stack);
             }
             case AND: {
-                
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+
+                if (arg2.type != BOOL || arg1.type != BOOL) {
+                    // wrong arguments, expected BOOL
+                }
+
+                if (arg1.value == 1 && arg2.value == 1) {
+                    data_stack_push(1, BOOL, interpreter->data_stack);
+                } else {
+                    data_stack_push(0, BOOL, interpreter->data_stack);
+                }
+
+                break;
             }
             case OR: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != BOOL || arg1.type != BOOL) {
+                    // wrong arguments, expected BOOL
+                }
+
+                if (arg1.value == 1 || arg2.value == 1) {
+                    data_stack_push(1, BOOL, interpreter->data_stack);
+                } else {
+                    data_stack_push(0, BOOL, interpreter->data_stack);
+                }
+
+                break;
             }
             case NOT: {
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg1.type != BOOL) {
+                    // wrong arguments, expected BOOL
+                }
+
+                if (arg1.value == 0) {
+                    data_stack_push(1, BOOL, interpreter->data_stack);
+                } else {
+                    data_stack_push(0, BOOL, interpreter->data_stack);
+                }
+
+                break;
             }
             case CONCAT: {
-
+                
             }
             case SUBSTR: {
 
