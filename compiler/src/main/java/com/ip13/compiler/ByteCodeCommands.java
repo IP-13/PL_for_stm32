@@ -60,10 +60,12 @@ public enum ByteCodeCommands {
     less(764),
     greater(765),
     // math non-arg
-    random_str(444),
-    random_bool(555),
-    random_float(666),
+    PI(775),
+    E(776),
     random_int(777),
+    random_string(778),
+    random_bool(779),
+    random_float(780),
     // special
     MAIN(999);
 
