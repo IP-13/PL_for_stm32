@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <math.h>
 
 #define DEFAULT // define your structs sizes (in bytes). They depend on memory num_of_entries
 
@@ -67,10 +68,12 @@ enum byte_code_commands {
     MAX = 763,
     LESS = 764,
     GREATER = 765,
-    RANDOM_STRING = 444,
-    RANDOM_BOOL = 555,
-    RANDOM_FLOAT = 666,
+    PI = 775,
+    E = 776,
     RANDOM_INT = 777,
+    RANDOM_STRING = 778,
+    RANDOM_BOOL = 779,
+    RANDOM_FLOAT = 780,
     MAIN = 999
 };
 
@@ -417,6 +420,20 @@ struct var get_data_from_data_stack_top(struct data_stack *stack, struct var_map
     }
 
     return var;
+}
+
+
+float int_to_float(int32_t num) {
+    void *p = &num;
+    float f = *(float *) p;
+    return f;
+}
+
+
+int32_t float_to_int(float f) {
+    void *p = &f;
+    int32_t num = *(int32_t *) p;
+    return num;
 }
 
 
@@ -809,16 +826,74 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case ABS: {
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type == INT) {
+                    int32_t num = arg1.value;
+                    if (num < 0) {
+                        num = -num;
+                    }
+                    data_stack_push(num, INT, interpreter->data_stack);
+                }
+
+                if (arg1.type == FLT) {
+                    float num = int_to_float(arg1.value);
+                    if (num < 0) {
+                        num = -num;
+                    }
+                    data_stack_push(float_to_int(num), FLT, interpreter->data_stack);
+                }
+
+                break;
             }
             case INC: {
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type == INT) {
+                    data_stack_push(arg1.value + 1, INT, interpreter->data_stack);
+                }
+
+                if (arg1.type == FLT) {
+                    float f = int_to_float(arg1.value);
+
+                    f++;
+
+                    data_stack_push(float_to_int(f), FLT, interpreter->data_stack);
+                }
+
+                break;
             }
             case DEC: {
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg1.type != INT && arg1.type != FLT) {
+                    // wrong argument
+                }
+
+                if (arg1.type == INT) {
+                    data_stack_push(arg1.value - 1, INT, interpreter->data_stack);
+                }
+
+                if (arg1.type == FLT) {
+                    float f = int_to_float(arg1.value);
+
+                    f--;
+
+                    data_stack_push(float_to_int(f), FLT, interpreter->data_stack);
+                }
+
+                break;
             }
             case POW: {
-
+                
             }
             case SUM: {
 
@@ -848,7 +923,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case RANDOM_STRING: {
-                
+
             }
             case RANDOM_BOOL : {
 
@@ -864,7 +939,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             default: {
-
+                // error
             }
         }
 
@@ -965,5 +1040,6 @@ int main() {
 
 //    interpret(&my_interpreter, byte_code, main_program_start);
 
+printf("%f", M_E);
     return 0;
 }
