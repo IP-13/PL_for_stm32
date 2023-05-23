@@ -15,7 +15,7 @@
 #define NULL_FLT_VALUE 0
 #define NULL_PTR_VALUE HEAP_SIZE
 #define NULL_STR_VALUE (-1)
-
+#define MAX_BYTE_CODE_SIZE 1000
 
 // bytecode commands
 enum byte_code_commands {
@@ -417,7 +417,8 @@ struct var get_data_from_data_stack_top(struct data_stack *stack, struct var_map
 }
 
 
-void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start) {
+void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start, uint32_t *byte_code_size_ptr) {
+    uint32_t byte_code_size = *byte_code_size_ptr;
     uint32_t curr_command_addr = start;
 
     while (byte_code[curr_command_addr] != EXIT) {
@@ -695,16 +696,114 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case CONCAT: {
-                
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+
+                if (arg2.type != STR || arg1.type != STR) {
+                    // wrong argument, expected STR
+                }
+
+                int32_t second_str_size = byte_code[arg2.value];
+                int32_t first_str_size = byte_code[arg1.value];
+                int32_t concat_str_size = second_str_size + first_str_size;
+
+                uint32_t concat_str_start_addr = byte_code_size;
+
+                byte_code[byte_code_size++] = concat_str_size;
+
+                for (size_t i = 0; i < first_str_size; i++) {
+                    byte_code[byte_code_size++] = byte_code[arg1.value + i];
+                }
+
+                for (size_t i = 0; i < second_str_size; i++) {
+                    byte_code[byte_code_size++] = byte_code[arg1.value + i];
+                }
+
+                data_stack_push(concat_str_start_addr, STR, interpreter->data_stack);
+
+                break;
             }
             case SUBSTR: {
+                struct var arg3 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg3.type != INT || arg2.type != INT || arg1.type != STR) {
+                    // wrong argument
+                }
+
+                int32_t str_size = byte_code[arg1.value];
+                int32_t str_start = arg1.value + 1;
+                int32_t new_str_size = arg3.value;
+                uint32_t new_str_start_addr = byte_code_size;
+                int32_t substr_pos_start = arg2.value;
+
+                if (new_str_size <= 0) {
+                    // size less or equal than 0
+                    break;
+                }
+
+                byte_code[byte_code_size++] = new_str_size;
+
+                for (size_t i = 0; i < new_str_size; i++) {
+                    byte_code[byte_code_size++] = byte_code[arg1.value + arg2.value + i];
+                }
+
+                data_stack_push(new_str_start_addr, STR, interpreter->data_stack);
+
+                break;
             }
             case LIKE: {
+                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg2.type != STR || arg1.type != STR) {
+                    // wrong argument, expected STR
+                }
+
+                int32_t second_str_size = byte_code[arg2.value];
+                int32_t first_str_size = byte_code[arg1.value];
+
+                int32_t second_str_start = arg2.value + 1;
+                int32_t first_str_start = arg1.value + 1;
+
+                int32_t curr_pos_in_second_str = 0;
+
+                int32_t entry_like = -1;
+
+                while (curr_pos_in_second_str < second_str_size) {
+                    if (byte_code[second_str_start + curr_pos_in_second_str] == byte_code[first_str_start]) {
+                        for (size_t i = 0; i < first_str_size; i++) {
+                            int32_t curr_str2_symbol = byte_code[second_str_start + curr_pos_in_second_str + i];
+                            int32_t curr_str1_symbol = byte_code[first_str_start + i];
+
+                            if (curr_str1_symbol == curr_str2_symbol) {
+                                if (i == first_str_size - 1) {
+                                    entry_like = i;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
+                    curr_pos_in_second_str++;
+                }
+
+                data_stack_push(entry_like, INT, interpreter->data_stack);
+
+                break;
             }
             case LENGTH: {
+                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
 
+                if (arg1.type != STR) {
+                    // wrong argument, expected STR
+                }
+
+                data_stack_push(byte_code[arg1.value], INT, interpreter->data_stack);
+
+                break;
             }
             case ABS: {
 
@@ -759,6 +858,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
         curr_command_addr++;
     }
+
+    *byte_code_size_ptr = byte_code_size;
 }
 
 
@@ -803,8 +904,9 @@ int main() {
     };
 
     uint32_t main_program_start = 21;
+    uint32_t byte_code_size = 42;
 
-    int32_t byte_code[] = {
+    int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
             201,
             2,
             203,
