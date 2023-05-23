@@ -296,6 +296,12 @@ public class SuperClass {
         if (type.equals(ByteCodeCommands.STR)) {
             byteCode.add(String.valueOf(stringLiteralsStorage.size()));
             stringLiteralsStorage.add(literal);
+        } else if (type.equals(ByteCodeCommands.BOOL)) {
+            if (literal.equals("TRUE")) {
+                byteCode.add("1");
+            } else {
+                byteCode.add("0");
+            }
         } else {
             byteCode.add(literal);
         }
