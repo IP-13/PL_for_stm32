@@ -514,6 +514,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                     var_map_push(vars[i].value, vars[i].type, interpreter->var_map_map);
                 }
 
+                curr_command_addr += num_of_args;
+
                 break;
             }
             case LIT: {
@@ -1269,7 +1271,6 @@ int main() {
     struct var_map var_map_map_data[RET_STACK_SIZE];
     struct heap_entry heap_data[HEAP_SIZE];
 
-
     for (uint32_t i = 0; i < DATA_STACK_SIZE; i++) {
         data_stack_data[i] = NULL_DATA_STACK_ENTRY;
     }
@@ -1290,7 +1291,6 @@ int main() {
         heap_data[i] = NULL_HEAP_ENTRY;
     }
 
-
     struct data_stack my_data_stack = {.num_of_entries = 0, .data = data_stack_data};
     struct ret_stack my_ret_stack = {.num_of_entries = 0, .data = ret_stack_data};
     struct var_map_map my_var_map_map = {.num_of_entries = 0, .data = var_map_map_data};
@@ -1302,11 +1302,34 @@ int main() {
             .heap = &my_heap
     };
 
-    uint32_t main_program_start = 0;
-    uint32_t byte_code_size = 8;
+    uint32_t main_program_start = 7;
+    uint32_t byte_code_size = 24;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
-
+            201,
+            1,
+            201,
+            120,
+            201,
+            10,
+            3,
+            999,
+            201,
+            111,
+            0,
+            110,
+            201,
+            4,
+            701,
+            111,
+            0,
+            110,
+            201,
+            4,
+            757,
+            112,
+            700,
+            0
     };
 
     interpret(&my_interpreter, byte_code, main_program_start, &byte_code_size);

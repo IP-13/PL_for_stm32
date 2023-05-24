@@ -88,6 +88,11 @@ public class SuperClass {
     }
 
 
+    public static int getByteCodeSize() {
+        return byteCode.size();
+    }
+
+
     public static void showByteCode(boolean showCommandsNumber) {
         if (showCommandsNumber) {
             for (int i = 0; i < byteCode.size(); i++) {
