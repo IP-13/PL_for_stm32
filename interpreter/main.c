@@ -1,6 +1,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+#include <stdlib.h>
 
 #define DEFAULT // define your structs sizes (in bytes). They depend on memory num_of_entries
 
@@ -68,10 +70,7 @@ enum byte_code_commands {
     GREATER = 763,
     PI = 775,
     E = 776,
-    RANDOM_INT = 777,
-    RANDOM_STRING = 778,
-    RANDOM_BOOL = 779,
-    RANDOM_FLOAT = 780,
+    RANDOM = 777,
     MAIN = 999
 };
 
@@ -1241,17 +1240,9 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 data_stack_push(float_to_int(M_E), FLT, interpreter->data_stack);
                 break;
             }
-            case RANDOM_STRING: {
-
-            }
-            case RANDOM_BOOL : {
-
-            }
-            case RANDOM_FLOAT: {
-
-            }
-            case RANDOM_INT : {
-
+            case RANDOM: {
+                data_stack_push(float_to_int((float) random() / (float) RAND_MAX), FLT, interpreter->data_stack);
+                break;
             }
             case MAIN: {
                 interpreter->var_map_map->num_of_entries++;
@@ -1270,6 +1261,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
 
 int main() {
+    srand(time(NULL));
+
     struct var data_stack_data[DATA_STACK_SIZE];
     uint32_t ret_stack_data[RET_STACK_SIZE];
     struct var var_map_data[VAR_MAP_SIZE];
@@ -1313,20 +1306,6 @@ int main() {
     uint32_t byte_code_size = 8;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
-            999,
-            776,
-            112,
-            700,
-            110,
-            203,
-            12,
-            700,
-            775,
-            112,
-            700,
-            0,
-            1,
-            32
 
     };
 
