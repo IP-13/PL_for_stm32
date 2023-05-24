@@ -570,9 +570,46 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 // can't meet
                 break;
             }
-                // itmova core
+                // core
             case PRINT: {
+                struct var data = data_stack_pop(interpreter->data_stack);
 
+                switch (data.type) {
+                    case BOOL: {
+                        if (data.value) {
+                            printf("TRUE");
+                        } else {
+                            printf("FALSE");
+                        }
+                        break;
+                    }
+                    case INT: {
+                        printf("%"PRId32"", data.value);
+                        break;
+                    }
+                    case FLT : {
+                        printf("%f", int_to_float(data.value));
+                        break;
+                    }
+                    case STR: {
+                        int32_t str_size = byte_code[data.value];
+                        int32_t str_start = data.value + 1;
+                        for (size_t i = 0; i < str_size; i++) {
+                            printf("%c", byte_code[str_start + i]);
+                        }
+
+                        break;
+                    }
+                    case PTR: {
+                        printf("%"PRId32"", data.value);
+                        break;
+                    }
+                    default: {
+                        // wrong argument
+                    }
+                }
+
+                break;
             }
             case ASSIGN: {
                 struct var new_data = data_stack_pop(interpreter->data_stack); // assigning value
@@ -1197,10 +1234,12 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case PI: {
-
+                data_stack_push(float_to_int(M_PI), FLT, interpreter->data_stack);
+                break;
             }
             case E: {
-
+                data_stack_push(float_to_int(M_E), FLT, interpreter->data_stack);
+                break;
             }
             case RANDOM_STRING: {
 
@@ -1215,7 +1254,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
             }
             case MAIN: {
-                // TODO create var map for main func
+                interpreter->var_map_map->num_of_entries++;
                 break;
             }
             default: {
@@ -1261,7 +1300,7 @@ int main() {
 
     struct data_stack my_data_stack = {.num_of_entries = 0, .data = data_stack_data};
     struct ret_stack my_ret_stack = {.num_of_entries = 0, .data = ret_stack_data};
-    struct var_map_map my_var_map_map = {.num_of_entries = 1, .data = var_map_map_data};
+    struct var_map_map my_var_map_map = {.num_of_entries = 0, .data = var_map_map_data};
     struct heap my_heap = {.num_of_entries = 0, .data = heap_data, .next_free_entry = 0};
     struct interpreter my_interpreter = {
             .data_stack = &my_data_stack,
@@ -1270,55 +1309,28 @@ int main() {
             .heap = &my_heap
     };
 
-    uint32_t main_program_start = 21;
-    uint32_t byte_code_size = 42;
+    uint32_t main_program_start = 0;
+    uint32_t byte_code_size = 8;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
-            201,
-            2,
-            203,
-            203,
-            10,
-            11,
-            1,
-            11,
-            10,
-            11,
-            1,
-            0,
-            110,
-            201,
-            10,
-            700,
-            2,
-            -6,
-            3,
             999,
+            776,
+            112,
+            700,
             110,
             203,
-            31,
-            110,
-            203,
-            38,
-            100,
-            0,
+            12,
+            700,
+            775,
             112,
             700,
             0,
-            6,
-            113,
-            119,
-            101,
-            114,
-            116,
-            121,
-            3,
             1,
-            2,
-            3
+            32
+
     };
 
-//    interpret(&my_interpreter, byte_code, main_program_start);
+    interpret(&my_interpreter, byte_code, main_program_start, &byte_code_size);
 
     return 0;
 }
