@@ -27,7 +27,7 @@ public enum ByteCodeCommands {
     STR(203),
     PTR(204),
     VOID(205),
-    // itmova-core
+    // core
     print(700),
     assign(701),
     // dynamic memory
@@ -58,8 +58,8 @@ public enum ByteCodeCommands {
     less(762),
     greater(763),
     // math non-arg
-    PI(775),
-    E(776),
+    pi(775),
+    e(776),
     random_int(777),
     random_string(778),
     random_bool(779),
@@ -81,7 +81,7 @@ public enum ByteCodeCommands {
     }
 
 
-    public static String getItmovaCore(String s) {
+    public static String getCore(String s) {
         try {
             return ByteCodeCommands.valueOf(s).toString();
         } catch (IllegalArgumentException ex) {

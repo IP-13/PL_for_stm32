@@ -1,4 +1,4 @@
-grammar Itmova;
+grammar plClab;
 
 @header {
     import com.ip13.compiler.SuperClass;

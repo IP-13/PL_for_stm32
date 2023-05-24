@@ -248,10 +248,10 @@ public class SuperClass {
 
 
     public static void funcCall(String funcName, int line) {
-        String itmovaFunc = ByteCodeCommands.getItmovaCore(funcName);
+        String coreFunc = ByteCodeCommands.getCore(funcName);
 
-        if (!isNull(itmovaFunc)) {
-            byteCode.add(itmovaFunc);
+        if (!isNull(coreFunc)) {
+            byteCode.add(coreFunc);
         } else {
             try {
                 int userDefinedFuncStart = funcList.stream().

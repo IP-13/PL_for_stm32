@@ -1,8 +1,8 @@
 package com.ip13;
 
-import com.ip13.antlr.ItmovaBaseListener;
-import com.ip13.antlr.ItmovaLexer;
-import com.ip13.antlr.ItmovaParser;
+import com.ip13.antlr.plClabBaseListener;
+import com.ip13.antlr.plClabLexer;
+import com.ip13.antlr.plClabParser;
 import com.ip13.compiler.SuperClass;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,22 +14,21 @@ public class Main {
     public static void main(String[] args) throws Exception {
         String program = """ 
                 MAIN
-                random_int();
-                random_string();
-                random_float();
-                random_bool();
+                print(e());
+                print(" ");
+                print(pi());
                 """;
 
-        ItmovaLexer lexer = new ItmovaLexer(CharStreams.fromString(program));
+        plClabLexer lexer = new plClabLexer(CharStreams.fromString(program));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ItmovaParser parser = new ItmovaParser(tokens);
+        plClabParser parser = new plClabParser(tokens);
         ParseTree tree = parser.program();
         ParseTreeWalker walker = new ParseTreeWalker();
-        walker.walk(new ItmovaBaseListener(), tree);
+        walker.walk(new plClabBaseListener(), tree);
 
         SuperClass.showByteCode(true);
         System.out.println("______________________________________");
-        SuperClass.showByteCodeInNumberFormat(true);
+        SuperClass.showByteCodeInNumberFormat(false);
     }
 }
 
