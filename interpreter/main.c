@@ -1,8 +1,5 @@
 #include <inttypes.h>
 #include <stdio.h>
-#include <math.h>
-#include <time.h>
-#include <stdlib.h>
 
 #define DEFAULT // define your structs sizes (in bytes). They depend on memory num_of_entries
 
@@ -928,31 +925,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
                 break;
             }
-            case POW: {
-                struct var arg_power = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
-                struct var arg_num = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
-
-                if (arg_power.type != INT && arg_power.type != FLT) {
-                    // wrong argument
-                }
-
-                if (arg_num.type != INT && arg_power.type != FLT) {
-                    // wrong argument
-                }
-
-                float power = int_to_float(arg_power.value);
-                float num = int_to_float(arg_num.value);
-
-                if (power < 1 && power > 0 && num < 0) {
-                    // arithmetic exception
-                }
-
-                float res = powf(num, power);
-
-                data_stack_push(float_to_int(res), FLT, interpreter->data_stack);
-
-                break;
-            }
             case SUM: {
                 struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
                 struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
@@ -1232,18 +1204,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                     data_stack_push(greater, INT, interpreter->data_stack);
                 }
 
-                break;
-            }
-            case PI: {
-                data_stack_push(float_to_int(M_PI), FLT, interpreter->data_stack);
-                break;
-            }
-            case E: {
-                data_stack_push(float_to_int(M_E), FLT, interpreter->data_stack);
-                break;
-            }
-            case RANDOM: {
-                data_stack_push(float_to_int((float) random() / (float) RAND_MAX), FLT, interpreter->data_stack);
                 break;
             }
             case MAIN: {

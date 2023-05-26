@@ -12,7 +12,9 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        String program = args[0];
+        String program = """
+                
+                """;
 
         plClabLexer lexer = new plClabLexer(CharStreams.fromString(program));
         CommonTokenStream tokens = new CommonTokenStream(lexer);

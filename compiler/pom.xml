@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ip13</groupId>
-    <artifactId>Forth_like_mova_for_STM32</artifactId>
+    <artifactId>compiler</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 
@@ -17,16 +17,10 @@
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-            <version>4.12.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.antlr</groupId>
             <artifactId>antlr4</artifactId>
             <version>4.12.0</version>
         </dependency>
     </dependencies>
-
 
     <build>
         <plugins>
