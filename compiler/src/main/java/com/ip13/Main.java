@@ -13,7 +13,31 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """
+                fact(N:int):int
+                START
                 
+                I:int;
+                assign(I, 1);
+                
+                RES:int;
+                assign(RES, 1);
+                
+                inc(N);
+                
+                FROM 1 TO N WITH 1:
+                START
+                assign(RES, mul(RES, I));
+                inc(I);
+                FINISH
+                
+                RETURN RES;
+                
+                FINISH
+                
+                MAIN
+                A:int;
+                assign(A, 5);
+                print(fact(A));
                 """;
 
         plClabLexer lexer = new plClabLexer(CharStreams.fromString(program));

@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define DEFAULT // define your structs sizes (in bytes). They depend on memory num_of_entries
 
@@ -62,12 +63,8 @@ enum byte_code_commands {
     SUB = 758,
     MUL = 759,
     DIV = 760,
-    MOD = 761,
     LESS = 762,
     GREATER = 763,
-    PI = 775,
-    E = 776,
-    RANDOM = 777,
     MAIN = 999
 };
 
@@ -194,10 +191,14 @@ void ret_stack_push(uint32_t top, struct ret_stack *stack) {
 
 struct var var_map_get(uint32_t var_index, uint32_t map_index, struct var_map_map *var_map_map) {
     if (map_index >= var_map_map->num_of_entries) {
+        printf("Map index out of bounds\n");
+        exit(1);
         // index out of bounds
     }
 
     if (var_index >= var_map_map->data[map_index].num_of_entries) {
+        printf("Var index out of bounds\n");
+        exit(1);
         // index out of bounds
     }
 
@@ -211,17 +212,20 @@ void var_map_set(int32_t value,
                  uint32_t map_index,
                  struct var_map_map *var_map_map) {
     if (map_index >= var_map_map->num_of_entries) {
-        // index out of bounds
+        printf("Map index out of bounds\n");
+        exit(1);
     }
 
     if (var_index >= var_map_map->data[map_index].num_of_entries) {
-        // index out of bounds
+        printf("Var index out of bounds\n");
+        exit(1);
     }
 
-    struct var curr_var_in_var_index = var_map_map->data[map_index].data[var_index];
+    struct var curr_data_at_var_index = var_map_map->data[map_index].data[var_index];
 
-    if (type != curr_var_in_var_index.type) {
-        // different types
+    if (type != curr_data_at_var_index.type) {
+        printf("Different types\n");
+        exit(1);
     }
 
     var_map_map->data[map_index].data[var_index].value = value;
@@ -229,11 +233,11 @@ void var_map_set(int32_t value,
 
 
 void var_map_push(int32_t value, enum byte_code_commands type, struct var_map_map *var_map_map) {
-    if (var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries == VAR_MAP_SIZE) {
+    int32_t index_to_push = var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries;
+
+    if (index_to_push == VAR_MAP_SIZE) {
         // stack overflow
     }
-
-    int32_t index_to_push = var_map_map->data[var_map_map->num_of_entries - 1].num_of_entries;
 
     struct var var = {.value = value, .type = type};
 
@@ -370,7 +374,7 @@ int32_t get_from_cycle_value(uint32_t *curr_command_addr, const int32_t *byte_co
 }
 
 
-uint32_t get_int_bits(uint32_t bits, int32_t from, int32_t to) { // from and to include
+uint32_t get_int_bits(uint32_t bits, int32_t from, int32_t to) { // 'from' and 'to' include
     return bits << (31 - from) >> (to + 31 - from);
 }
 
@@ -410,7 +414,7 @@ struct var get_data_from_data_stack_top(struct data_stack *stack, struct var_map
     struct var var = data_stack_pop(stack);
 
     if (var.type == VAR) { // if var.type == VAR, then var.value = var index in var_map
-        var = var_map_get(var.value, var_map_map->num_of_entries, var_map_map);
+        var = var_map_get(var.value, var_map_map->num_of_entries - 1, var_map_map);
     }
 
     return var;
@@ -432,6 +436,8 @@ int32_t float_to_int(float f) {
 
 
 void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t start, uint32_t *byte_code_size_ptr) {
+    struct var_map_map *var_map_map = interpreter->var_map_map;
+
     uint32_t byte_code_size = *byte_code_size_ptr;
     uint32_t curr_command_addr = start;
 
@@ -508,7 +514,16 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 }
 
                 for (uint32_t i = 0; i < num_of_args; i++) {
-                    var_map_push(vars[i].value, vars[i].type, interpreter->var_map_map);
+                    struct var var;
+
+                    if (vars[i].type == VAR) {
+                        var = var_map_get(vars[i].value, interpreter->var_map_map->num_of_entries - 2,
+                                          interpreter->var_map_map);
+                    } else {
+                        var = vars[i];
+                    }
+
+                    var_map_push(var.value, var.type, interpreter->var_map_map);
                 }
 
                 curr_command_addr += num_of_args;
@@ -526,6 +541,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case OFC: {
+                // can't meet
                 break;
             }
             case RLIT: {
@@ -536,7 +552,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
             }
             case RVAR: {
                 struct var var = var_map_get(byte_code[++curr_command_addr],
-                                             interpreter->var_map_map->num_of_entries,
+                                             interpreter->var_map_map->num_of_entries - 1,
                                              interpreter->var_map_map);
                 data_stack_push(var.value, var.type, interpreter->data_stack);
                 break;
@@ -545,30 +561,30 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case BOOL: {
-                var_map_push(BOOL, NULL_BOOL_VALUE, interpreter->var_map_map);
+                var_map_push(NULL_BOOL_VALUE, BOOL, interpreter->var_map_map);
                 break;
             }
             case INT: {
-                var_map_push(INT, NULL_INT_VALUE, interpreter->var_map_map);
+                var_map_push(NULL_INT_VALUE, INT, interpreter->var_map_map);
                 break;
             }
             case FLT: {
-                var_map_push(FLT, NULL_FLT_VALUE, interpreter->var_map_map);
+                var_map_push(NULL_FLT_VALUE, FLT, interpreter->var_map_map);
                 break;
             }
             case STR: {
-                var_map_push(STR, NULL_STR_VALUE, interpreter->var_map_map);
+                var_map_push(NULL_STR_VALUE, STR, interpreter->var_map_map);
                 break;
             }
             case PTR: {
-                var_map_push(PTR, NULL_PTR_VALUE, interpreter->var_map_map);
+                var_map_push(NULL_PTR_VALUE, PTR, interpreter->var_map_map);
                 break;
             }
             case VOID: {
                 // can't meet
                 break;
             }
-                // core
+            // core library
             case PRINT: {
                 struct var data = data_stack_pop(interpreter->data_stack);
 
@@ -619,10 +635,10 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 }
 
                 struct var old_data = var_map_get(var.value, // var.value = var index
-                                                  interpreter->var_map_map->num_of_entries,
+                                                  interpreter->var_map_map->num_of_entries - 1,
                                                   interpreter->var_map_map);
 
-                if (old_data.type != new_data.type) {
+                if (old_data.type != NOT_YET_DEFINED_TYPE || old_data.type != new_data.type) {
                     // different types
                 }
 
@@ -634,7 +650,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 var_map_set(new_data.value,
                             new_data.type,
                             var.value,
-                            interpreter->var_map_map->num_of_entries,
+                            interpreter->var_map_map->num_of_entries - 1,
                             interpreter->var_map_map);
 
                 break;
@@ -884,46 +900,62 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                 break;
             }
             case INC: {
-                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var var = data_stack_pop(interpreter->data_stack);
 
-                if (arg1.type != INT && arg1.type != FLT) {
+                if (var.type != VAR) {
+                    // wrong argument, expected variable
+                }
+
+                struct var data = var_map_get(var.value, interpreter->var_map_map->num_of_entries - 1,
+                                              interpreter->var_map_map);
+
+                if (data.type != INT && data.type != FLT) {
                     // wrong argument
                 }
 
-                if (arg1.type == INT) {
-                    data_stack_push(arg1.value + 1, INT, interpreter->data_stack);
+                if (data.type == INT) {
+                    var_map_set(data.value + 1, INT, var.value, interpreter->var_map_map->num_of_entries - 1,
+                                interpreter->var_map_map);
                 }
 
-                if (arg1.type == FLT) {
-                    float f = int_to_float(arg1.value);
+                if (data.type == FLT) {
+                    float f = int_to_float(data.value);
 
                     f++;
 
-                    data_stack_push(float_to_int(f), FLT, interpreter->data_stack);
+                    var_map_set(float_to_int(f), FLT, var.value, interpreter->var_map_map->num_of_entries - 1,
+                                interpreter->var_map_map);
                 }
 
                 break;
             }
             case DEC: {
-                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
+                struct var var = data_stack_pop(interpreter->data_stack);
 
-                if (arg1.type != INT && arg1.type != FLT) {
+                if (var.type != VAR) {
+                    // wrong argument, expected variable
+                }
+
+                struct var data = var_map_get(var.value, interpreter->var_map_map->num_of_entries - 1,
+                                              interpreter->var_map_map);
+
+                if (data.type != INT && data.type != FLT) {
                     // wrong argument
                 }
 
-                if (arg1.type == INT) {
-                    data_stack_push(arg1.value - 1, INT, interpreter->data_stack);
+                if (data.type == INT) {
+                    var_map_set(data.value - 1, INT, var.value, interpreter->var_map_map->num_of_entries,
+                                interpreter->var_map_map);
                 }
 
-                if (arg1.type == FLT) {
-                    float f = int_to_float(arg1.value);
+                if (data.type == FLT) {
+                    float f = int_to_float(data.value);
 
                     f--;
 
-                    data_stack_push(float_to_int(f), FLT, interpreter->data_stack);
+                    var_map_set(float_to_int(f), FLT, var.value, interpreter->var_map_map->num_of_entries,
+                                interpreter->var_map_map);
                 }
-
-                break;
             }
             case SUM: {
                 struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
@@ -1081,69 +1113,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
                 break;
             }
-            case MOD: {
-                struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
-                struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
-
-                if (arg2.type != INT && arg2.type != FLT) {
-                    // wrong argument
-                }
-
-                if (arg1.type != INT && arg1.type != FLT) {
-                    // wrong argument
-                }
-
-                int32_t arg2_value = arg2.value;
-                int32_t arg1_value = arg1.value;
-
-                if (arg1.type == FLT && arg2.type == FLT) {
-                    float numerator = int_to_float(arg1_value);
-                    float denominator = int_to_float(arg2_value);
-
-                    if (denominator == 0) {
-                        // division by 0
-                    }
-
-                    float mod = fmodf(numerator, denominator);
-
-                    data_stack_push(float_to_int(mod), FLT, interpreter->data_stack);
-                } else if (arg1.type == FLT) {
-                    float numerator = int_to_float(arg1_value);
-                    float denominator = (float) arg2_value;
-
-                    if (denominator == 0) {
-                        // division by 0
-                    }
-
-                    float mod = fmodf(numerator, denominator);
-
-                    data_stack_push(float_to_int(mod), FLT, interpreter->data_stack);
-                } else if (arg2.type == FLT) {
-                    float numerator = (float) arg1_value;
-                    float denominator = int_to_float(arg2_value);
-
-                    if (denominator == 0) {
-                        // division by 0
-                    }
-
-                    float mod = fmodf(numerator, denominator);
-
-                    data_stack_push(float_to_int(mod), FLT, interpreter->data_stack);
-                } else {
-                    int32_t numerator = arg1_value;
-                    int32_t denominator = arg2_value;
-
-                    if (denominator == 0) {
-                        // division by 0
-                    }
-
-                    int32_t mod = numerator % denominator;
-
-                    data_stack_push(mod, INT, interpreter->data_stack);
-                }
-
-                break;
-            }
             case LESS: {
                 struct var arg2 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
                 struct var arg1 = get_data_from_data_stack_top(interpreter->data_stack, interpreter->var_map_map);
@@ -1169,8 +1138,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                     int32_t less = (float) arg1_value < int_to_float(arg2_value);
                     data_stack_push(less, FLT, interpreter->data_stack);
                 } else {
-                    int32_t less = arg2_value < arg1_value;
-                    data_stack_push(less, INT, interpreter->data_stack);
+                    int32_t less = arg1_value < arg2_value;
+                    data_stack_push(less, BOOL, interpreter->data_stack);
                 }
 
                 break;
@@ -1200,8 +1169,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
                     int32_t greater = (float) arg1_value > int_to_float(arg2_value);
                     data_stack_push(greater, FLT, interpreter->data_stack);
                 } else {
-                    int32_t greater = arg2_value > arg1_value;
-                    data_stack_push(greater, INT, interpreter->data_stack);
+                    int32_t greater = arg1_value > arg2_value;
+                    data_stack_push(greater, BOOL, interpreter->data_stack);
                 }
 
                 break;
@@ -1223,8 +1192,6 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, uint32_t sta
 
 
 int main() {
-    srand(time(NULL));
-
     struct var data_stack_data[DATA_STACK_SIZE];
     uint32_t ret_stack_data[RET_STACK_SIZE];
     struct var var_map_data[VAR_MAP_SIZE];
@@ -1262,16 +1229,54 @@ int main() {
             .heap = &my_heap
     };
 
-    uint32_t main_program_start = 7;
-    uint32_t byte_code_size = 24;
+    uint32_t main_program_start = 45;
+    uint32_t byte_code_size = 60;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
             201,
             1,
             201,
-            120,
             201,
+            111,
+            1,
+            110,
+            201,
+            1,
+            701,
+            201,
+            111,
+            2,
+            110,
+            201,
+            1,
+            701,
+            111,
+            0,
+            736,
             10,
+            11,
+            1,
+            12,
+            0,
+            11,
+            1,
+            0,
+            111,
+            2,
+            111,
+            2,
+            111,
+            1,
+            759,
+            112,
+            701,
+            111,
+            1,
+            736,
+            2,
+            -14,
+            121,
+            2,
             3,
             999,
             201,
@@ -1279,14 +1284,12 @@ int main() {
             0,
             110,
             201,
-            4,
+            5,
             701,
             111,
             0,
-            110,
-            201,
-            4,
-            757,
+            100,
+            0,
             112,
             700,
             0

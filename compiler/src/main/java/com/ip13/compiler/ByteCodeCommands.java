@@ -54,13 +54,8 @@ public enum ByteCodeCommands {
     sub(758),
     mul(759),
     div(760),
-    mod(761),
     less(762),
     greater(763),
-    // math non-arg
-    pi(775),
-    e(776),
-    random(777),
     // special
     MAIN(999);
 
