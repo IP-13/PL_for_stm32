@@ -1301,6 +1301,12 @@ int main(void)
           .heap = &my_heap
   };
 
+  
+  
+  // place output from byte-code compiler here
+  
+  
+  
   int main_program_start = 0;
   int byte_code_size = 11;
 
@@ -1366,6 +1372,12 @@ int main(void)
           700,
           0
   };
+  
+  
+  
+  // end compiled byte-code 
+  
+  
 
   interpret(&my_interpreter, byte_code, main_program_start, &byte_code_size);
   // you can't put your code below
