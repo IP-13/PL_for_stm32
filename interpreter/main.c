@@ -42,7 +42,7 @@ enum byte_code {
     PTR = 204,
     VOID = 205,
     NOT_YET_DEFINED_TYPE = 206,
-    PRINT = 700,
+    PRINTF = 700,
     ASSIGN = 701,
     GET_DATA = 710,
     SET_DATA = 711,
@@ -563,7 +563,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 break;
             }
                 // core library
-            case PRINT: {
+            case PRINTF: {
                 struct var data = data_stack_pop(data_stack);
 
                 switch (data.type) {
