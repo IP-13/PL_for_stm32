@@ -1,7 +1,6 @@
 grammar plClab;
 
 @header {
-    package com.ip13.antlr;
     import com.ip13.compiler.SuperClass;
     import com.ip13.compiler.ByteCodeCommands;
 }

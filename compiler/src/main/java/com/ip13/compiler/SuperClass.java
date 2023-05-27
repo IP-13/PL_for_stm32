@@ -56,7 +56,6 @@ public class SuperClass {
             if (command.equals("counter")) {
                 byteCodeInNumberFormat.add(0);
             } else {
-
                 int numberFormat = ByteCodeCommands.getCommandInNumberFormat(command);
 
                 if (numberFormat != -1) {
@@ -206,13 +205,29 @@ public class SuperClass {
 
 
     public static void funcDef(String name, String type, int line) {
-        ByteCodeCommands byteCodeType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
-        FuncInfo lastFunc = funcList.get(funcList.size() - 1);
-        lastFunc.setName(name);
-        lastFunc.setType(byteCodeType);
-        byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
-        byteCode.add(lastFunc.getStart(), byteCodeType.toString());
-        byteCode.add(ByteCodeCommands.jret.toString());
+        Optional<FuncInfo> oldFuncDefinition = funcList.stream().limit(funcList.size() - 1).
+                filter(funcInfo -> funcInfo.getName().equals(name)).
+                findFirst();
+
+        if (oldFuncDefinition.isPresent()) {
+            ByteCodeCommands newType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
+
+            if (!oldFuncDefinition.get().getType().equals(newType)) {
+                throw new RuntimeException("Different types in function " + oldFuncDefinition.get().getName() + " redefinition");
+            }
+
+            FuncInfo newFuncDefinition = funcList.get(funcList.size() - 1);
+            oldFuncDefinition.get().setStart(newFuncDefinition.getStart());
+            funcList.remove(funcList.size() - 1);
+        } else {
+            ByteCodeCommands byteCodeType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
+            FuncInfo lastFunc = funcList.get(funcList.size() - 1);
+            lastFunc.setName(name);
+            lastFunc.setType(byteCodeType);
+            byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
+            byteCode.add(lastFunc.getStart(), byteCodeType.toString());
+            byteCode.add(ByteCodeCommands.jret.toString());
+        }
     }
 
 

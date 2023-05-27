@@ -26,14 +26,15 @@ public class Main {
                 
                 FROM 1 TO N WITH 1:
                 START
+                
                 assign(RES, mul(RES, I));
                 inc(I);
+                
                 FINISH
                 
                 RETURN RES;
-                
                 FINISH
-                
+
                 MAIN
                 A:int;
                 assign(A, 5);
