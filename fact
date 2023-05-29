@@ -1,0 +1,67 @@
+PL-cLab:
+fact(N: int): int
+START
+  inc(N);
+  I: int;
+  inc(I);
+  RES: int;
+  inc(RES);
+  FROM 1 TO N WITH 1:
+  START
+    assign(RES, mul(RES, I));
+  inc(I);
+  FINISH
+  RETURN RES;
+FINISH
+MAIN
+print(fact(10));
+
+Байт-код:
+201
+1
+201
+111
+0
+736
+201
+111
+1
+736
+201
+111
+2
+736
+10
+11
+1
+12
+0
+11
+1
+0
+111
+2
+111
+2
+111
+1
+759
+112
+701
+111
+1
+736
+2
+-14
+121
+2
+3
+999
+110
+201
+10
+100
+0
+112
+700
+0
