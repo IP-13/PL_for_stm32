@@ -42,7 +42,7 @@ public class SuperClass {
                     byteCode.set(i + 2, String.valueOf(byteCode.size()));                         // sets addr of string start at the end of bytecode
                     byteCode.add(String.valueOf(len));                                            // adds string literal size
                     for (int j = 0; j < len; j++) {                                                 // adds string chars
-                        byteCode.add(String.valueOf(s.charAt(j + 1)));
+                        byteCode.add(String.valueOf((int)s.charAt(j + 1)));
                     }
                 }
             }
@@ -115,6 +115,10 @@ public class SuperClass {
         }
     }
 
+
+    public static void showByteCodeToInputInInterpreter() {
+
+    }
 
     // antlr rules
     public static void program() {
