@@ -49,7 +49,6 @@ public enum ByteCodeCommands {
     inc(736),
     dec(737),
     // math binary
-    pow(756),
     sum(757),
     sub(758),
     mul(759),
