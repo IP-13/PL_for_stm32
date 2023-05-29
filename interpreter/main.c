@@ -447,7 +447,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 }
 
                 if (var.value == 0) {
-                    curr_addr += (byte_code[curr_addr + 1] - 1);
+                    curr_addr += (byte_code[curr_addr + 1]);
                 } else {
                     curr_addr++;
                 }
@@ -543,7 +543,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
             }
                 // core library
             case PRINTF: {
-                struct var data = data_stack_pop(data_stack);
+                struct var data = get_data_from_data_stack_top(data_stack, vmm);
 
                 switch (data.type) {
                     case BOOL: {
@@ -742,11 +742,11 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 byte_code[byte_code_size++] = concat_str_size;
 
                 for (size_t i = 0; i < first_str_size; i++) {
-                    byte_code[byte_code_size++] = byte_code[arg1.value + i];
+                    byte_code[byte_code_size++] = byte_code[arg1.value + 1 + i];
                 }
 
                 for (size_t i = 0; i < second_str_size; i++) {
-                    byte_code[byte_code_size++] = byte_code[arg1.value + i];
+                    byte_code[byte_code_size++] = byte_code[arg2.value + 1 + i];
                 }
 
                 data_stack_push((struct var) {concat_str_start_addr, STR}, data_stack);
@@ -822,16 +822,17 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 int32_t entry_like = -1;
 
                 while (curr_pos_in_second_str < second_str_size) {
+                    if (entry_like != -1) {
+                        break;
+                    }
                     if (byte_code[second_str_start + curr_pos_in_second_str] == byte_code[first_str_start]) {
+                        entry_like = curr_pos_in_second_str;
                         for (int32_t i = 0; i < first_str_size; i++) {
                             int32_t curr_str2_symbol = byte_code[second_str_start + curr_pos_in_second_str + i];
                             int32_t curr_str1_symbol = byte_code[first_str_start + i];
 
-                            if (curr_str1_symbol == curr_str2_symbol) {
-                                if (i == first_str_size - 1) {
-                                    entry_like = i;
-                                }
-                            } else {
+                            if (curr_str1_symbol != curr_str2_symbol) {
+                                entry_like = -1;
                                 break;
                             }
                         }
@@ -1202,7 +1203,7 @@ int main() {
         num_of_vars_in_map[i] = 0;
     }
 
-    for (size_t i = 0; i < VAR_MAP_SIZE; i++) {
+    for (size_t i = 0; i < RET_STACK_SIZE * VAR_MAP_SIZE; i++) {
         vmm_data[i] = NULL_VAR_MAP_ENTRY;
     }
 
@@ -1222,13 +1223,13 @@ int main() {
     };
 
     int32_t main_program_start = 0;
-    int32_t byte_code_size = 6;
+    int32_t byte_code_size = 8;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
             999,
             110,
-            201,
-            3,
+            202,
+            -1026932944,
             700,
             0
     };
