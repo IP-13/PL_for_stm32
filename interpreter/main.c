@@ -1,15 +1,10 @@
 #include <inttypes.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-#define DEFAULT // define your structs sizes (in bytes). They depend on memory num_of_entries
-
-#ifdef DEFAULT
-#define DATA_STACK_SIZE 1024 // max num_of_entries - 65536
-#define RET_STACK_SIZE 1024 // max num_of_entries - 65536
-#define VAR_MAP_SIZE 1024 // max num_of_entries - 65536
-#define HEAP_SIZE 1024 // max num_of_entries - 4294967296
-#endif
+#define DATA_STACK_SIZE 32 // max num_of_entries - 65536
+#define RET_STACK_SIZE 32 // max num_of_entries - 65536
+#define VAR_MAP_SIZE 32 // max num_of_entries - 65536
+#define HEAP_SIZE 32 // max num_of_entries - 4294967296
 
 #define NULL_BOOL_VALUE 0
 #define NULL_INT_VALUE 0
@@ -87,15 +82,10 @@ struct ret_stack {
 };
 
 
-struct var_map {
-    int32_t num_of_entries;
-    struct var *data;
-};
-
-
 struct var_map_map {
-    int32_t num_of_entries;
-    struct var_map *data;
+    int32_t num_of_maps;
+    int32_t *num_of_vars_in_maps;
+    struct var *data;
 };
 
 
@@ -129,12 +119,6 @@ const struct heap_entry NULL_HEAP_ENTRY = {0, NOT_YET_DEFINED_TYPE, 0};
 
 
 // FUNCTIONS
-void print_error_and_exit(char *message, int32_t line) {
-    printf("%s at line %"PRId32"", message, line);
-    exit(1);
-}
-
-
 struct var data_stack_pop(struct data_stack *data_stack) {
     if (data_stack->num_of_entries == 0) {
         // data_stack underflow
@@ -176,54 +160,47 @@ void ret_stack_push(int32_t top, struct ret_stack *ret_stack) {
 
 
 struct var var_map_get(int32_t var_index, int32_t map_index, struct var_map_map *vmm) {
-    if (map_index >= vmm->num_of_entries) {
-        printf("Map index out of bounds\n");
-        exit(1);
+    if (map_index >= vmm->num_of_maps) {
         // index out of bounds
     }
 
-    if (var_index >= vmm->data[map_index].num_of_entries) {
-        printf("Var index out of bounds\n");
-        exit(1);
+    if (var_index >= vmm->num_of_vars_in_maps[map_index]) {
         // index out of bounds
     }
 
-    return vmm->data[map_index].data[var_index];
+    return vmm->data[map_index * VAR_MAP_SIZE + var_index];
 }
 
 
 void var_map_set(struct var var, int32_t var_index, int32_t map_index, struct var_map_map *vmm) {
-    if (map_index >= vmm->num_of_entries) {
-        printf("Map index out of bounds\n");
-        exit(1);
+    if (map_index >= vmm->num_of_maps) {
+        // index out of bounds
     }
 
-    if (var_index >= vmm->data[map_index].num_of_entries) {
-        printf("Var index out of bounds\n");
-        exit(1);
+    if (var_index >= vmm->num_of_vars_in_maps[map_index]) {
+        // index out of bounds
     }
 
-    struct var curr_data_at_var_index = vmm->data[map_index].data[var_index];
+    struct var curr_data_at_var_index = vmm->data[map_index * VAR_MAP_SIZE + var_index];
 
     if (var.type != curr_data_at_var_index.type) {
-        printf("Different types\n");
-        exit(1);
+        // different types
     }
 
-    vmm->data[map_index].data[var_index].value = var.value;
+    vmm->data[map_index * VAR_MAP_SIZE + var_index].value = var.value;
 }
 
 
 void var_map_push(struct var var, struct var_map_map *vmm) {
-    int32_t index_to_push = vmm->data[vmm->num_of_entries - 1].num_of_entries;
+    int32_t index_to_push = vmm->num_of_vars_in_maps[vmm->num_of_maps - 1];
 
     if (index_to_push == VAR_MAP_SIZE) {
-        // stack overflow
+        // var_map overflow
     }
 
-    vmm->data[vmm->num_of_entries - 1].data[index_to_push] = var;
+    vmm->data[(vmm->num_of_maps - 1) * VAR_MAP_SIZE + index_to_push] = var;
 
-    vmm->data[vmm->num_of_entries - 1].num_of_entries++;
+    vmm->num_of_vars_in_maps[vmm->num_of_maps - 1]++;
 }
 
 
@@ -323,19 +300,21 @@ void heap_inc_num_of_links(int32_t addr, struct heap *heap) {
 
 
 void remove_var_map(struct var_map_map *vmm, struct heap *heap) { // removes (nullifies) top var_map
-    vmm->num_of_entries--;
+    vmm->num_of_maps--;
 
-    for (size_t i = 0; i < vmm->data[vmm->num_of_entries].num_of_entries; i++) {
-        struct var var = vmm->data[vmm->num_of_entries].data[i];
+    uint32_t start_index = vmm->num_of_maps * VAR_MAP_SIZE;
+
+    for (size_t i = start_index; i < start_index + vmm->num_of_vars_in_maps[vmm->num_of_maps]; i++) {
+        struct var var = vmm->data[i];
 
         if (var.type == PTR) {
             heap_dec_num_of_links(var.value, heap);
         }
 
-        vmm->data[vmm->num_of_entries].data[i] = NULL_VAR_MAP_ENTRY;
+        vmm->data[i] = NULL_VAR_MAP_ENTRY;
     }
 
-    vmm->data[vmm->num_of_entries].num_of_entries = 0;
+    vmm->num_of_vars_in_maps[vmm->num_of_maps] = 0;
 }
 
 
@@ -346,7 +325,7 @@ int32_t get_from_cycle_value(int32_t *curr_command_addr, const int32_t *byte_cod
         value = byte_code[++(*curr_command_addr)];
     } else {
         int32_t var_index = byte_code[++(*curr_command_addr)];
-        int32_t map_index = vmm->num_of_entries - 1;
+        int32_t map_index = vmm->num_of_maps - 1;
         value = var_map_get(var_index, map_index, vmm).value;
     }
 
@@ -390,7 +369,7 @@ struct var get_data_from_data_stack_top(struct data_stack *data_stack, struct va
     struct var var = data_stack_pop(data_stack);
 
     if (var.type == VAR) { // if var.type == VAR, then var.value = var index in var_map
-        var = var_map_get(var.value, vmm->num_of_entries - 1, vmm);
+        var = var_map_get(var.value, vmm->num_of_maps - 1, vmm);
     }
 
     return var;
@@ -480,7 +459,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
 
                 curr_addr = byte_code[curr_addr + 1];
 
-                vmm->num_of_entries++; // var_map for func created
+                vmm->num_of_maps++; // var_map for func created
 
                 int32_t num_of_args = byte_code[++curr_addr];
                 struct var vars[num_of_args];
@@ -498,7 +477,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     struct var var;
 
                     if (vars[i].type == VAR) {
-                        var = var_map_get(vars[i].value, vmm->num_of_entries - 2, vmm);
+                        var = var_map_get(vars[i].value, vmm->num_of_maps - 2, vmm);
                     } else {
                         var = vars[i];
                     }
@@ -531,7 +510,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 break;
             }
             case RVAR: {
-                struct var var = var_map_get(byte_code[++curr_addr], vmm->num_of_entries - 1, vmm);
+                struct var var = var_map_get(byte_code[++curr_addr], vmm->num_of_maps - 1, vmm);
                 data_stack_push(var, data_stack);
                 break;
             }
@@ -611,7 +590,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     // wrong argument
                 }
 
-                struct var old_data = var_map_get(var.value, vmm->num_of_entries - 1, vmm);
+                struct var old_data = var_map_get(var.value, vmm->num_of_maps - 1, vmm);
 
                 if (old_data.type != NOT_YET_DEFINED_TYPE || old_data.type != new_data.type) {
                     // different types
@@ -622,7 +601,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     heap_inc_num_of_links(new_data.value, heap);
                 }
 
-                var_map_set(new_data, var.value, vmm->num_of_entries - 1, vmm);
+                var_map_set(new_data, var.value, vmm->num_of_maps - 1, vmm);
 
                 break;
             }
@@ -634,7 +613,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     // here should have been name of ptr
                 }
 
-                int32_t data_addr = var_map_get(ptr.value, vmm->num_of_entries - 1, vmm).value;
+                int32_t data_addr = var_map_get(ptr.value, vmm->num_of_maps - 1, vmm).value;
 
                 struct var data = get_by_addr(data_addr, heap, vmm);
 
@@ -669,13 +648,13 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 }
 
                 int32_t addr = 1 << 15;
-                addr += (vmm->num_of_entries - 1);
+                addr += (vmm->num_of_maps - 1);
                 addr = addr << 16;
                 addr += var.value;
 
                 int32_t var_index = var.value;
 
-                enum byte_code type = var_map_get(var_index, vmm->num_of_entries - 1, vmm).type;
+                enum byte_code type = var_map_get(var_index, vmm->num_of_maps - 1, vmm).type;
 
                 data_stack_push((struct var) {addr, type}, data_stack);
 
@@ -916,14 +895,14 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     // wrong argument, expected variable
                 }
 
-                struct var data = var_map_get(var.value, vmm->num_of_entries - 1, vmm);
+                struct var data = var_map_get(var.value, vmm->num_of_maps - 1, vmm);
 
                 if (data.type != INT && data.type != FLT) {
                     // wrong argument
                 }
 
                 if (data.type == INT) {
-                    var_map_set((struct var) {data.value + 1, INT}, var.value, vmm->num_of_entries - 1, vmm);
+                    var_map_set((struct var) {data.value + 1, INT}, var.value, vmm->num_of_maps - 1, vmm);
                 }
 
                 if (data.type == FLT) {
@@ -931,7 +910,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
 
                     f++;
 
-                    var_map_set((struct var) {float_to_int(f), FLT}, var.value, vmm->num_of_entries - 1, vmm);
+                    var_map_set((struct var) {float_to_int(f), FLT}, var.value, vmm->num_of_maps - 1, vmm);
                 }
 
                 break;
@@ -943,14 +922,14 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     // wrong argument, expected variable
                 }
 
-                struct var data = var_map_get(var.value, vmm->num_of_entries - 1, vmm);
+                struct var data = var_map_get(var.value, vmm->num_of_maps - 1, vmm);
 
                 if (data.type != INT && data.type != FLT) {
                     // wrong argument
                 }
 
                 if (data.type == INT) {
-                    var_map_set((struct var) {data.value - 1, INT}, var.value, vmm->num_of_entries, vmm);
+                    var_map_set((struct var) {data.value - 1, INT}, var.value, vmm->num_of_maps, vmm);
                 }
 
                 if (data.type == FLT) {
@@ -958,7 +937,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
 
                     f--;
 
-                    var_map_set((struct var) {float_to_int(f), FLT}, var.value, vmm->num_of_entries, vmm);
+                    var_map_set((struct var) {float_to_int(f), FLT}, var.value, vmm->num_of_maps, vmm);
                 }
 
                 break;
@@ -1189,7 +1168,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                 break;
             }
             case MAIN: {
-                vmm->num_of_entries++;
+                vmm->num_of_maps++;
                 break;
             }
             default: {
@@ -1207,8 +1186,8 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
 int main() {
     struct var data_stack_data[DATA_STACK_SIZE];
     int32_t ret_stack_data[RET_STACK_SIZE];
-    struct var var_map_data[VAR_MAP_SIZE];
-    struct var_map vmm_data[RET_STACK_SIZE];
+    int32_t num_of_vars_in_map[RET_STACK_SIZE];
+    struct var vmm_data[RET_STACK_SIZE * VAR_MAP_SIZE];
     struct heap_entry heap_data[HEAP_SIZE];
 
     for (size_t i = 0; i < DATA_STACK_SIZE; i++) {
@@ -1219,12 +1198,12 @@ int main() {
         ret_stack_data[i] = NULL_RET_STACK_ENTRY;
     }
 
-    for (size_t i = 0; i < VAR_MAP_SIZE; i++) {
-        var_map_data[i] = NULL_VAR_MAP_ENTRY;
+    for (size_t i = 0; i < RET_STACK_SIZE; i++) {
+        num_of_vars_in_map[i] = 0;
     }
 
-    for (size_t i = 0; i < RET_STACK_SIZE; i++) {
-        vmm_data[i].data = var_map_data;
+    for (size_t i = 0; i < VAR_MAP_SIZE; i++) {
+        vmm_data[i] = NULL_VAR_MAP_ENTRY;
     }
 
     for (size_t i = 0; i < HEAP_SIZE; i++) {
@@ -1233,7 +1212,7 @@ int main() {
 
     struct data_stack my_data_stack = {.num_of_entries = 0, .data = data_stack_data};
     struct ret_stack my_ret_stack = {.num_of_entries = 0, .data = ret_stack_data};
-    struct var_map_map my_vmm = {.num_of_entries = 0, .data = vmm_data};
+    struct var_map_map my_vmm = {.num_of_maps = 0, .num_of_vars_in_maps = num_of_vars_in_map, .data = vmm_data};
     struct heap my_heap = {.num_of_entries = 0, .data = heap_data, .next_free_entry = 0};
     struct interpreter my_interpreter = {
             .data_stack = &my_data_stack,
@@ -1242,68 +1221,14 @@ int main() {
             .heap = &my_heap
     };
 
-    int32_t main_program_start = 45;
-    int32_t byte_code_size = 60;
+    int32_t main_program_start = 0;
+    int32_t byte_code_size = 6;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
-            201,
-            1,
-            201,
-            201,
-            111,
-            1,
-            110,
-            201,
-            1,
-            701,
-            201,
-            111,
-            2,
-            110,
-            201,
-            1,
-            701,
-            111,
-            0,
-            736,
-            10,
-            11,
-            1,
-            12,
-            0,
-            11,
-            1,
-            0,
-            111,
-            2,
-            111,
-            2,
-            111,
-            1,
-            759,
-            112,
-            701,
-            111,
-            1,
-            736,
-            2,
-            -14,
-            121,
-            2,
-            3,
             999,
-            201,
-            111,
-            0,
             110,
             201,
-            5,
-            701,
-            111,
-            0,
-            100,
-            0,
-            112,
+            3,
             700,
             0
     };
