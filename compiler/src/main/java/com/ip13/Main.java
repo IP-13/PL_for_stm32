@@ -5,22 +5,22 @@ import com.ip13.compiler.SuperClass;
 public class Main {
     public static void main(String[] args) throws Exception {
         String program = """
-                int_equal(A: int, B: int): bool
+                fact(N: int): int
                 START
-                  RETURN and(not(greater(A, B)), not(less(A, B)));
+                  inc(N);
+                  I: int;
+                  inc(I);
+                  RES: int;
+                  inc(RES);
+                  FROM 1 TO N WITH 1:
+                  START
+                    assign(RES, mul(RES, I));
+                  inc(I);
+                  FINISH
+                  RETURN RES;
                 FINISH
-                                
-                str_equal(S1:string, S2:string):bool
-                START
-                  RETURN and(int_equal(like(S1, S2), 0), int_equal(length(S1), length(S2)));
-                FINISH
-                                
                 MAIN
-                S1:string;
-                S2:string;
-                assign(S1, "123456789");
-                assign(S2, "987654321");
-                print(str_equal(S1, S2));
+                print(fact(10));
                 """;
 
         SuperClass.generateFileForCLabExecution(program);

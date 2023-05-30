@@ -13,6 +13,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.util.Objects.isNull;
@@ -121,7 +122,7 @@ public class SuperClass {
 
 
     public static void generateFileForCLabExecution(String program) {
-        File cLabFile = new File("YourProgram.plCLab");
+        File cLabFile = new File("YourProgram" + LocalDateTime.now() + ".plCLab");
         try {
             boolean isCreated = cLabFile.createNewFile();
             if (!isCreated) {
