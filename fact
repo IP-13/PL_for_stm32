@@ -1,4 +1,3 @@
-PL-cLab:
 fact(N: int): int
 START
   inc(N);
