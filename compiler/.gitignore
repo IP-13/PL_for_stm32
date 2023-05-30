@@ -1,4 +1,3 @@
 .idea
 target
-src/main/java/com/ip13/antlr/*
-!src/main/java/com/ip13/antlr/plClab.g4
+YourProgram.plCLab
