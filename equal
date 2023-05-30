@@ -1,4 +1,3 @@
-PL-cLab:
 int_equal(A:int, B:int): bool
 START
 RETURN and(not(less(A, B)), not(greater(A, B)));
