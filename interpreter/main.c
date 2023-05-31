@@ -969,7 +969,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     float sum = (float) arg1_value + int_to_float(arg2_value);
                     data_stack_push((struct var) {float_to_int(sum), FLT}, data_stack);
                 } else {
-                    int32_t sum = arg2_value + arg1_value;
+                    int32_t sum = arg1_value + arg2_value;
                     data_stack_push((struct var) {sum, INT}, data_stack);
                 }
 
@@ -1001,7 +1001,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     float sub = (float) arg1_value - int_to_float(arg2_value);
                     data_stack_push((struct var) {float_to_int(sub), FLT}, data_stack);
                 } else {
-                    int32_t sub = arg2_value - arg1_value;
+                    int32_t sub = arg1_value - arg2_value;
                     data_stack_push((struct var) {sub, INT}, data_stack);
                 }
 
@@ -1033,7 +1033,7 @@ void interpret(struct interpreter *interpreter, int32_t *byte_code, int32_t star
                     float mul = (float) arg1_value * int_to_float(arg2_value);
                     data_stack_push((struct var) {float_to_int(mul), FLT}, data_stack);
                 } else {
-                    int32_t mul = arg2_value * arg1_value;
+                    int32_t mul = arg1_value * arg2_value;
                     data_stack_push((struct var) {mul, INT}, data_stack);
                 }
 
@@ -1222,14 +1222,50 @@ int main() {
             .heap = &my_heap
     };
 
-    int32_t main_program_start = 0;
-    int32_t byte_code_size = 8;
+    int32_t main_program_start = 33;
+    int32_t byte_code_size = 42;
 
     int32_t byte_code[MAX_BYTE_CODE_SIZE] = {
+            201,
+            1,
+            201,
+            201,
+            1,
+            201,
+            111,
+            0,
+            110,
+            201,
+            2,
+            762,
+            20,
+            5,
+            120,
+            201,
+            1,
+            3,
+            111,
+            0,
+            111,
+            0,
+            110,
+            201,
+            1,
+            758,
+            112,
+            100,
+            0,
+            112,
+            759,
+            122,
+            3,
             999,
             110,
-            202,
-            -1026932944,
+            201,
+            10,
+            100,
+            3,
+            112,
             700,
             0
     };

@@ -28,7 +28,7 @@ public class SuperClass {
     private static final Stack<Integer> ifOperatorStack = new Stack<>();
 
 
-    private static void generateByteCode(String program) {
+    public static void generateByteCode(String program) {
         plClabLexer lexer = new plClabLexer(CharStreams.fromString(program));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         plClabParser parser = new plClabParser(tokens);
@@ -121,7 +121,7 @@ public class SuperClass {
     }
 
 
-    public static void generateFileForCLabExecution(String program) {
+    public static void generateFileForCLabExecution() {
         File cLabFile = new File("YourProgram" + LocalDateTime.now() + ".plCLab");
         try {
             boolean isCreated = cLabFile.createNewFile();
@@ -131,8 +131,6 @@ public class SuperClass {
         } catch (IOException exception) {
             throw new RuntimeException(exception.getMessage());
         }
-
-        generateByteCode(program);
 
         try (PrintWriter writer = new PrintWriter(cLabFile)) {
             writer.println("#include \"main.h\"\n" +
@@ -1109,7 +1107,7 @@ public class SuperClass {
                     "                    float sum = (float) arg1_value + int_to_float(arg2_value);\n" +
                     "                    data_stack_push((struct var) {float_to_int(sum), FLT}, data_stack);\n" +
                     "                } else {\n" +
-                    "                    int32_t sum = arg2_value + arg1_value;\n" +
+                    "                    int32_t sum = arg1_value + arg2_value;\n" +
                     "                    data_stack_push((struct var) {sum, INT}, data_stack);\n" +
                     "                }\n" +
                     "\n" +
@@ -1141,7 +1139,7 @@ public class SuperClass {
                     "                    float sub = (float) arg1_value - int_to_float(arg2_value);\n" +
                     "                    data_stack_push((struct var) {float_to_int(sub), FLT}, data_stack);\n" +
                     "                } else {\n" +
-                    "                    int32_t sub = arg2_value - arg1_value;\n" +
+                    "                    int32_t sub = arg1_value - arg2_value;\n" +
                     "                    data_stack_push((struct var) {sub, INT}, data_stack);\n" +
                     "                }\n" +
                     "\n" +
@@ -1173,7 +1171,7 @@ public class SuperClass {
                     "                    float mul = (float) arg1_value * int_to_float(arg2_value);\n" +
                     "                    data_stack_push((struct var) {float_to_int(mul), FLT}, data_stack);\n" +
                     "                } else {\n" +
-                    "                    int32_t mul = arg2_value * arg1_value;\n" +
+                    "                    int32_t mul = arg1_value * arg2_value;\n" +
                     "                    data_stack_push((struct var) {mul, INT}, data_stack);\n" +
                     "                }\n" +
                     "\n" +
@@ -1461,6 +1459,7 @@ public class SuperClass {
         fromCycleStack.add(byteCode.size() - 1);
     }
 
+
     public static void upperBorderInt(String lit) {
         byteCode.add(ByteCodeCommands.fint.toString());
         byteCode.add(lit);
@@ -1503,27 +1502,26 @@ public class SuperClass {
 
 
     public static void funcDef(String name, String type, int line) {
-        Optional<FuncInfo> oldFuncDefinition = funcList.stream().limit(funcList.size() - 1).
+        Optional<FuncInfo> isPresentoldFuncDefinition = funcList.stream().limit(funcList.size() - 1).
                 filter(funcInfo -> funcInfo.getName().equals(name)).
                 findFirst();
 
-        if (oldFuncDefinition.isPresent()) {
+        if (isPresentoldFuncDefinition.isPresent()) {
+            FuncInfo oldFuncDefinition = isPresentoldFuncDefinition.get();
             ByteCodeCommands newType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
-
-            if (!oldFuncDefinition.get().getType().equals(newType)) {
-                throw new RuntimeException("Different types in function " + oldFuncDefinition.get().getName() + " redefinition");
-            }
-
             FuncInfo newFuncDefinition = funcList.get(funcList.size() - 1);
-            oldFuncDefinition.get().setStart(newFuncDefinition.getStart());
+            oldFuncDefinition.setStart(newFuncDefinition.getStart());
+            oldFuncDefinition.setType(newType);
+            byteCode.add(newFuncDefinition.getStart(), String.valueOf(newFuncDefinition.getNumOfParams()));
+            byteCode.add(newFuncDefinition.getStart(), newType.toString());
             funcList.remove(funcList.size() - 1);
         } else {
-            ByteCodeCommands byteCodeType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
+            ByteCodeCommands funcType = defineType(type, "Unknown return type in func " + name + " definition at line " + line);
             FuncInfo lastFunc = funcList.get(funcList.size() - 1);
             lastFunc.setName(name);
-            lastFunc.setType(byteCodeType);
+            lastFunc.setType(funcType);
             byteCode.add(lastFunc.getStart(), String.valueOf(lastFunc.getNumOfParams()));
-            byteCode.add(lastFunc.getStart(), byteCodeType.toString());
+            byteCode.add(lastFunc.getStart(), funcType.toString());
         }
     }
 
